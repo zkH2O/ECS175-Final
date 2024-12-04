@@ -1,7 +1,9 @@
 'use strict'
 
 import { hex2rgb, deg2rad, loadExternalFile } from '../utils/utils.js'
-import Box from './box3d.js'
+import Sphere3D from './sphere3d.js'
+import Cylinder3D from './cylinder3d.js';
+import Box3D from './box3d.js'
 import Input from '../input/input.js'
 import * as mat4 from '../lib/glmatrix/mat4.js'
 import * as vec3 from '../lib/glmatrix/vec3.js'
@@ -32,13 +34,25 @@ class WebGlApp
 
         // Store the shader(s)
         this.shaders = shaders // Collection of all shaders
-        this.box_shader = this.shaders[0]
+        this.sphere_shader = this.shaders[0]
         this.light_shader = this.shaders[this.shaders.length - 1]
         this.active_shader = 1
         
-        // Create a box instance and create a variable to track its rotation
-        this.box = new Box( gl, this.box_shader )
+        // Create a sphere instance and create a variable to track its rotation
+        this.sphere = new Sphere3D( gl, this.sphere_shader )
         this.animation_step = 0
+
+        //Creatating small snow layer
+        this.snowBase = new Cylinder3D(gl, this.shaders[0], 0.76, 0.01);
+        this.snowBase.setPosition(0, -0.66, 0);
+        this.snowBase.setColor([0.0, 0.0, 1.0])
+
+        //creating the bottom platform
+        this.bottom = new Box3D(gl, this.shaders[0])
+        this.bottom.setPosition(0, -0.93, 0);
+        this.bottom.setScale([1.45, 0.53, 1.45]); // Stretch it vertically
+        this.bottom.setRotation(Math.PI / 4, [0, 1, 0]); // Rotate around Y-axis
+        this.bottom.setColor([1,0,0])
 
         // Declare a variable to hold a Scene
         // Scene files can be loaded through the UI (see below)
@@ -362,8 +376,9 @@ class WebGlApp
 
         // Render the box
         // This will use the MVP that was passed to the shader
-        this.box.render( gl )
-
+        this.sphere.render( gl )
+        this.snowBase.render(gl)
+        this.bottom.render(gl)
         // Render the scene
         if (this.scene) this.scene.render( gl )
 

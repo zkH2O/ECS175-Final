@@ -1,60 +1,64 @@
-'use strict'
+'use strict';
 
-import { Object3D } from '../../assignment3.object3d.js'
+import { Object3D } from '../../assignment3.object3d.js';
 
-class Box extends Object3D {
-
+/**
+ * Box3D Class
+ * Defines a 3D box shape with 8 vertices and 12 triangles.
+ */
+class Box3D extends Object3D {
     /**
-     * Creates a 3D box from 8 vertices and draws it as a line mesh
-     * @param {WebGL2RenderingContext} gl The webgl2 rendering context
-     * @param {Shader} shader The shader to be used to draw the object
+     * Creates a Box3D object
+     * @param {WebGL2RenderingContext} gl The WebGL context
+     * @param {Shader} shader The shader program for the box
+     * @param {Material | null} material Optional material for shading
      */
-    constructor( gl, shader, box_scale = [1,1,1] ) 
-    {
-        let vertices = [
-            1.000000, 1.000000, -1.000000,
-            1.000000, -1.000000, -1.000000,
-            1.000000, 1.000000, 1.000000,
-            1.000000, -1.000000, 1.000000,
-            -1.000000, 1.000000, -1.000000,
-            -1.000000, -1.000000, -1.000000,
-            -1.000000, 1.000000, 1.000000,
-            -1.000000, -1.000000, 1.000000
-        ]
+    constructor(gl, shader, material = null) {
+        // Define the vertices of a box centered at the origin
+        const vertices = [
+            // Front face
+            -0.5, -0.5,  0.5, // 0: bottom-left
+             0.5, -0.5,  0.5, // 1: bottom-right
+             0.5,  0.5,  0.5, // 2: top-right
+            -0.5,  0.5,  0.5, // 3: top-left
 
-        for (let i = 0; i < vertices.length; i++) {
-            vertices[i] = vertices[i] * box_scale[i%3]
-        }
+            // Back face
+            -0.5, -0.5, -0.5, // 4: bottom-left
+             0.5, -0.5, -0.5, // 5: bottom-right
+             0.5,  0.5, -0.5, // 6: top-right
+            -0.5,  0.5, -0.5  // 7: top-left
+        ];
 
-        let indices = [
-            0, 1,
-            1, 3,
-            3, 2,
-            2, 0,
+        // Define the indices for the 12 triangles of the box
+        const indices = [
+            // Front face
+            0, 1, 2,
+            0, 2, 3,
 
-            0, 4,
-            1, 5,
-            2, 6,
-            3, 7,
+            // Back face
+            4, 5, 6,
+            4, 6, 7,
 
-            4, 5,
-            5, 7,
-            7, 6,
-            6, 4
-        ]
-        
-        super( gl, shader, vertices, indices, gl.LINES )
-    }
+            // Top face
+            3, 2, 6,
+            3, 6, 7,
 
-    /**
-     * Perform any necessary updates. 
-     * Children can override this.
-     * 
-     */
-    udpate( ) 
-    {
-        return
+            // Bottom face
+            0, 1, 5,
+            0, 5, 4,
+
+            // Right face
+            1, 2, 6,
+            1, 6, 5,
+
+            // Left face
+            0, 3, 7,
+            0, 7, 4
+        ];
+
+        // Call the parent class constructor
+        super(gl, shader, vertices, indices, gl.TRIANGLES, material);
     }
 }
 
-export default Box
+export default Box3D;

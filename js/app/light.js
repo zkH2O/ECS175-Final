@@ -4,14 +4,14 @@ import * as mat4 from '../lib/glmatrix/mat4.js'
 import * as vec3 from '../lib/glmatrix/vec3.js'
 import * as quat4 from '../lib/glmatrix/quat.js'
 
-import Box from './box3d.js'
+import Sphere3D from './sphere3d.js'
 
 /**
  * The Light base class. Stores common properties of all lights like color and intensity
  * It derives from the Box class (which is an Object3D in turn). This is done to visually
  * represent lights in the scene a differently shaped boxes.
  */
-class Light extends Box {
+class Light extends Sphere3D {
 
     /**
      * Constructs a new light instance

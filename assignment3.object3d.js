@@ -27,7 +27,7 @@ class Object3D
     {
         this.shader = shader
         this.material = material
-
+        this.color = [1.0, 1.0, 1.0]
         this.vertices = vertices
         this.vertices_buffer = null
         this.createVBO( gl )
@@ -68,6 +68,15 @@ class Object3D
         this.draw_mode = draw_mode
     }
 
+
+    /**
+     * Set the object's color
+     * @param {Array<Number>} color Array of [r, g, b] values
+     */
+    setColor(color) {
+        this.color = color;
+    }
+
     /**
      * Set this object's model transformation
      * 
@@ -75,6 +84,21 @@ class Object3D
      */
     setTransformation( transformation ) {
         this.model_matrix = transformation
+    }
+
+    // Function to set the position
+    setPosition(x, y, z) {
+        mat4.translate(this.model_matrix, this.model_matrix, [x, y, z]);
+    }
+
+    // Function to set the scale
+    setScale(scale) {
+        mat4.scale(this.model_matrix, this.model_matrix, scale);
+    }
+
+    // Function to set rotation (around an axis)
+    setRotation(angle, axis) {
+        mat4.rotate(this.model_matrix, this.model_matrix, angle, axis);
     }
 
     /**
@@ -160,6 +184,7 @@ class Object3D
         // Set up shader
         this.shader.use( )
         this.shader.setUniform4x4f('u_m', this.model_matrix)
+        this.shader.setUniform3f('u_color', this.color)
 
         // Draw the element
         gl.drawElements( this.draw_mode, this.indices.length, gl.UNSIGNED_INT, 0 )
@@ -257,7 +282,7 @@ class ShadedObject3D extends Object3D {
         this.shader.setUniform3f('u_material.kD', this.material.kD)
         this.shader.setUniform3f('u_material.kS', this.material.kS)
         this.shader.setUniform1f('u_material.shininess', this.material.shininess)
-
+        this.shader.setUniform3f('u_color', this.color)
         // Set up texture units
         this.shader.setUniform1i('u_material.map_kD', 0)
         this.shader.setUniform1i('u_material.map_nS', 1)

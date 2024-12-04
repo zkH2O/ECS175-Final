@@ -24,7 +24,8 @@ class App
             new Shader( this.gl, '../../shaders/unlit.vert.glsl', '../../shaders/unlit.frag.glsl' ),
             new Shader( this.gl, '../../shaders/phong.vert.glsl', '../../shaders/phong.frag.glsl' ),
             new Shader( this.gl, '../../assignment3.textured.vert.glsl', '../../assignment3.textured.frag.glsl' ),
-            new Shader( this.gl, '../../shaders/lights.vert.glsl', '../../shaders/lights.frag.glsl' )
+            new Shader( this.gl, '../../shaders/lights.vert.glsl', '../../shaders/lights.frag.glsl' ),
+            new Shader(this.gl, '../../shaders/vertex.shader.glsl', '../../shaders/fragment.shader.glsl')
         ]
 
         // resize handling

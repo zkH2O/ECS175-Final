@@ -27,11 +27,14 @@ class Object3D
     {
         this.shader = shader
         this.material = material
-        this.color = [1.0, 1.0, 1.0]
+
+        this.color = [1.0, 0, 1.0]
         this.vertices = vertices
         this.vertices_buffer = null
         this.createVBO( gl )
-
+        console.log('Setting u_color to:', this.color);
+        console.log('Uniform location for u_color:', this.shader.getUniformLocation('u_color'));
+    
         this.indices = indices
         this.index_buffer = null
         this.createIBO( gl )
@@ -175,6 +178,9 @@ class Object3D
      */
     render( gl )
     {
+        this.shader.use( )
+        this.shader.setUniform4x4f('u_m', this.model_matrix)
+        this.shader.setUniform3f('u_color', this.color)
         // Bind vertex array object
         gl.bindVertexArray( this.vertex_array_object )
 
@@ -182,9 +188,7 @@ class Object3D
         gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, this.index_buffer )
 
         // Set up shader
-        this.shader.use( )
-        this.shader.setUniform4x4f('u_m', this.model_matrix)
-        this.shader.setUniform3f('u_color', this.color)
+
 
         // Draw the element
         gl.drawElements( this.draw_mode, this.indices.length, gl.UNSIGNED_INT, 0 )

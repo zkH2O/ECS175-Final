@@ -43,17 +43,17 @@ class WebGlApp
         this.animation_step = 0
 
         //Creatating small snow layer
-        this.snowBase = new Cylinder3D(gl, this.shaders[0], 0.76, 0.01);
+        this.snowBase = new Cylinder3D(gl, this.shaders[4], 0.76, 0.01);
         this.snowBase.setPosition(0, -0.66, 0);
-        this.snowBase.setColor([0.0, 0.0, 1.0])
-
+        this.snowBase.setColor([150.0, 149.0, 146.0])
+        console.log(this.snowBase.color)
         //creating the bottom platform
-        this.bottom = new Box3D(gl, this.shaders[0])
+        this.bottom = new Box3D(gl, this.shaders[4])
         this.bottom.setPosition(0, -0.93, 0);
         this.bottom.setScale([1.45, 0.53, 1.45]); // Stretch it vertically
         this.bottom.setRotation(Math.PI / 4, [0, 1, 0]); // Rotate around Y-axis
-        this.bottom.setColor([1,0,0])
-
+        this.bottom.setColor([0.0 ,0.0 ,0.0])
+        console.log(this.bottom.color)
         // Declare a variable to hold a Scene
         // Scene files can be loaded through the UI (see below)
         this.scene = null
@@ -90,6 +90,7 @@ class WebGlApp
             shader.setUniform4x4f('u_v', this.view)
             shader.setUniform4x4f('u_p', this.projection)
             shader.unuse()
+            
         }
 
     }  
@@ -130,7 +131,7 @@ class WebGlApp
      */
     clearCanvas( gl )
     {
-        gl.clearColor(...hex2rgb('#000000'), 1.0)
+        gl.clearColor(...hex2rgb('#E6E1E1'), 1.0)
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     }
     

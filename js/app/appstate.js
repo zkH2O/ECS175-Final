@@ -13,13 +13,15 @@ class AppState {
             'Control': {
                 'Camera': document.getElementById('controlCamera'),
             },
-            '3D Scene': document.getElementById('openfileActionInput'),
+            'Select Scene Node': document.getElementById( 'selectSceneNodeSelect' ),
+            '3D Scene': document.getElementById('openfileActionInput')
         };
 
         // Create state dictionary
         this.ui_state = {
             'Shading': '',
             'Control': '',
+            'Select Scene Node': ''
         };
 
         // Update UI with default values
@@ -27,12 +29,26 @@ class AppState {
         this.updateUI('Control', 'Camera');
 
         // Set asynchronous handlers
-        this.onOpen3DSceneCallback = null;
+        this.ui_categories['Select Scene Node'].onchange = () => {
+            this.ui_state['Select Scene Node'] = this.ui_categories['Select Scene Node'].value
+        }
+        this.onOpen3DSceneCallback = null
         this.ui_categories['3D Scene'].onchange = (evt) => {
-            if (this.onOpen3DSceneCallback == null) return;
-
-            this.onOpen3DSceneCallback(evt.target.files[0].name);
-        };
+            if (this.onOpen3DSceneCallback == null)
+                return
+            
+            let scene = this.onOpen3DSceneCallback(evt.target.files[0].name)
+            this.ui_categories['Select Scene Node'].innerHTML = ''
+            for (let node of scene.getNodes()) {
+                let option = document.createElement('option')
+                option.value = node.name
+                option.innerHTML = node.name
+                this.ui_categories['Select Scene Node'].appendChild(option)
+            }
+            this.ui_categories['Select Scene Node'].removeAttribute('disabled')
+            this.ui_categories['Select Scene Node'].value = this.ui_categories['Select Scene Node'].getElementsByTagName('option')[0].value
+            this.ui_state['Select Scene Node'] = this.ui_categories['Select Scene Node'].value
+        }
     }
 
     /**

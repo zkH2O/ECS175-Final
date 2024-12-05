@@ -131,7 +131,7 @@ class WebGlApp
      */
     clearCanvas( gl )
     {
-        gl.clearColor(...hex2rgb('#E6E1E1'), 1.0)
+        gl.clearColor(...hex2rgb('#2B2B2B'), 1.0)
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     }
     

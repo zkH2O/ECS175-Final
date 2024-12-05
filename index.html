@@ -16,7 +16,7 @@
             <div class="setting">
                 <h3>3D Scene</h3>
                 <div class="setting-item-container">
-                    <div id="openfileLabel" class="setting-item active">Load File<br></div>
+                    <div id="openfileLabel" class="setting-item active">Load Scene File<br></div>
                     <div id="openfileAction" class="setting-item inactive">
                         <input id="openfileActionInput" type="file" multiple="false" accept="application/json">
                     </div>
@@ -29,16 +29,22 @@
                     <div id="shadingTextured" class="setting-item inactive">[V] Textured</div>
                 </div>
             </div>
-            
+
             <div class="setting">
                 <h3>Control</h3>
                 <div class="setting-item-container">
                     <div id="controlCamera" class="setting-item inactive">Camera</div>
+                    <div id="controlSceneNode" class="setting-item inactive">[Hold Q] Scene Node</div>
                 </div>
             </div>
-            
+            <div class="setting">
+                <h3>Select Scene Node</h3>
+                <div class="setting-item-container">
+                    <div id="selectSceneNodeLabel" class="setting-item active">Select Scene Node</div>
+                    <select id="selectSceneNodeSelect" disabled></select>
+                </div>
+            </div>
         </div>
-
         <div id="canvas-container">
             <canvas id="canvas"></canvas>
         </div>
@@ -46,5 +52,4 @@
     <noscript>You need to enable JavaScript to view the full site.</noscript>
     <script type="module" src="js/main.js"></script>
 </body>
-
 </html>

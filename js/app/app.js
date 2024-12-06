@@ -26,7 +26,9 @@ class App
             new Shader( this.gl, '../../assignment3.textured.vert.glsl', '../../assignment3.textured.frag.glsl' ),
             new Shader( this.gl, '../../shaders/lights.vert.glsl', '../../shaders/lights.frag.glsl' ),
             new Shader(this.gl, '../../shaders/vertex.shader.glsl', '../../shaders/fragment.shader.glsl'),
-            new Shader(this.gl, '../../shaders/skybox.vert.glsl', '../../shaders/skybox.frag.glsl')
+            new Shader(this.gl, '../../shaders/skybox.vert.glsl', '../../shaders/skybox.frag.glsl'),
+            new Shader(this.gl, '../../shaders/glass.vert.glsl', '../../shaders/glass.frag.glsl'),
+            new Shader(this.gl, '../../shaders/refrac.vert.glsl', '../../shaders/refrac.frag.glsl')
         ]
 
         // resize handling

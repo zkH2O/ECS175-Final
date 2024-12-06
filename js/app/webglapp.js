@@ -294,62 +294,79 @@ class WebGlApp
      * 
      * @param {Number} delta_time The time in seconds since the last frame (floating point number)
      */
-    updateCamera( delta_time ) {
-        let view_dirty = false
-
+    updateCamera(delta_time) {
+        let view_dirty = false;
+    
         // Control - Zoom
         if (Input.isMouseDown(2)) {
             // Scale camera position
-            let translation = vec3.scale(vec3.create(), this.forward, -Input.getMouseDy() * delta_time)
-            this.eye = vec3.add(vec3.create(), this.eye, translation)
-
+            let translation = vec3.scale(vec3.create(), this.forward, -Input.getMouseDy() * delta_time);
+            this.eye = vec3.add(vec3.create(), this.eye, translation);
+    
             // Set dirty flag to trigger view matrix updates
-            view_dirty = true
+            view_dirty = true;
         }
-
+    
         // Control - Rotate
         if (Input.isMouseDown(0) && !Input.isKeyDown(' ')) {
-            // Rotate around xz plane around y
-            this.eye = vec3.rotateY(vec3.create(), this.eye, this.center, deg2rad(-10 * Input.getMouseDx() * delta_time ))
+            // Rotate around xz plane around Y
+            this.eye = vec3.rotateY(vec3.create(), this.eye, this.center, deg2rad(-10 * Input.getMouseDx() * delta_time));
             
             // Rotate around view-aligned rotation axis
-            let rotation = mat4.fromRotation(mat4.create(), deg2rad(-10 * Input.getMouseDy() * delta_time ), this.right)
-            this.eye = vec3.transformMat4(vec3.create(), this.eye, rotation)
-
+            let rotation = mat4.fromRotation(mat4.create(), deg2rad(-10 * Input.getMouseDy() * delta_time), this.right);
+            this.eye = vec3.transformMat4(vec3.create(), this.eye, rotation);
+    
             // Set dirty flag to trigger view matrix updates
-            view_dirty = true
+            view_dirty = true;
         }
-
+    
         // Control - Pan
         if (Input.isMouseDown(1) || (Input.isMouseDown(0) && Input.isKeyDown(' '))) {
             // Create translation on two view-aligned axes
-            let translation = vec3.add(vec3.create(), 
+            let translation = vec3.add(
+                vec3.create(),
                 vec3.scale(vec3.create(), this.right, -0.75 * Input.getMouseDx() * delta_time),
                 vec3.scale(vec3.create(), this.up, 0.75 * Input.getMouseDy() * delta_time)
-            )
-
+            );
+    
             // Translate both eye and center in parallel
-            this.eye = vec3.add(vec3.create(), this.eye, translation)
-            this.center = vec3.add(vec3.create(), this.center, translation)
-
-            view_dirty = true
+            this.eye = vec3.add(vec3.create(), this.eye, translation);
+            this.center = vec3.add(vec3.create(), this.center, translation);
+    
+            view_dirty = true;
         }
-
+    
         // Update view matrix if needed
         if (view_dirty) {
             // Update Forward, Right, and Up vectors
-            this.updateViewSpaceVectors()
-
-            this.view = mat4.lookAt(mat4.create(), this.eye, this.center, this.up)
-
-            for (let shader of this.shaders) {
-                shader.use()
-                shader.setUniform3f('u_eye', this.eye)
-                shader.setUniform4x4f('u_v', this.view)
-                shader.unuse()
+            this.updateViewSpaceVectors();
+    
+            // Update the camera's view matrix
+            this.view = mat4.lookAt(mat4.create(), this.eye, this.center, this.up);
+    
+            // Calculate the skybox view matrix (remove translation)
+            this.skyboxViewMatrix = mat4.clone(this.view);
+            this.skyboxViewMatrix[12] = 0; // Remove translation (X)
+            this.skyboxViewMatrix[13] = 0; // Remove translation (Y)
+            this.skyboxViewMatrix[14] = 0; // Remove translation (Z)
+    
+            // Pass the updated view and skybox matrices to the shaders
+            for (let i = 0; i < this.shaders.length; i++) {
+                const shader = this.shaders[i];
+                shader.use();
+                
+                if (i === 5) { // Assuming shader[5] is the skybox shader
+                    shader.setUniform4x4f('u_v', this.skyboxViewMatrix); // Skybox view matrix
+                } else {
+                    shader.setUniform4x4f('u_v', this.view); // Normal view matrix
+                }
+                
+                shader.setUniform3f('u_eye', this.eye);
+                shader.unuse();
             }
         }
     }
+    
 
     /**
      * Update a SceneNode's local transformation

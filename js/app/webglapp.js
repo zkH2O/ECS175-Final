@@ -5,6 +5,8 @@ import Sphere3D from './sphere3d.js'
 import Cylinder3D from './cylinder3d.js';
 import Box3D from './box3d.js'
 import Input from '../input/input.js'
+import CubeMapLoader from './cubemaploader.js';
+import Skybox3D from './skybox3d.js';
 import * as mat4 from '../lib/glmatrix/mat4.js'
 import * as vec3 from '../lib/glmatrix/vec3.js'
 import * as quat from '../lib/glmatrix/quat.js'
@@ -32,28 +34,63 @@ class WebGlApp
         // Set GL flags
         this.setGlFlags( gl )
 
+
         // Store the shader(s)
         this.shaders = shaders // Collection of all shaders
-        this.sphere_shader = this.shaders[0]
+        this.sphere_shader = this.shaders[1]
         this.light_shader = this.shaders[this.shaders.length - 1]
         this.active_shader = 1
         
         // Create a sphere instance and create a variable to track its rotation
         this.sphere = new Sphere3D( gl, this.sphere_shader )
         this.animation_step = 0
+        this.sphere.shader.use();
+        this.sphere.shader.setUniform1i('u_isGlass', true);
+        this.sphere.shader.setUniform1f('u_refractiveIndex', 1.5); // Glass index
+        this,this.sphere.setDrawMode(gl.TRIANGLES)
+        this.sphere.shader.unuse();
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
         //Creatating small snow layer
         this.snowBase = new Cylinder3D(gl, this.shaders[4], 0.76, 0.01);
+        this.snowBase.shader.use();
         this.snowBase.setPosition(0, -0.66, 0);
         this.snowBase.setColor([150.0, 149.0, 146.0])
-        console.log(this.snowBase.color)
+        this.snowBase.shader.unuse()
+
         //creating the bottom platform
         this.bottom = new Box3D(gl, this.shaders[4])
         this.bottom.setPosition(0, -0.93, 0);
         this.bottom.setScale([1.45, 0.53, 1.45]); // Stretch it vertically
         this.bottom.setRotation(Math.PI / 4, [0, 1, 0]); // Rotate around Y-axis
         this.bottom.setColor([0.0 ,0.0 ,0.0])
-        console.log(this.bottom.color)
+
+        // loading cubemap
+        //doing the skybox yippeee
+        this.cubeMapFaces = [
+            '../../textures/px.png', // +x
+            '../../textures/nx.png', // -x
+            '../../textures/py.png', // +y
+            '../../textures/ny.png', // -y
+            '../../textures/pz.png', // +z
+            '../../textures/nz.png'  // -z
+        ];
+        this.envMap = CubeMapLoader.load(gl, this.cubeMapFaces);
+        console.log('Environment Map Loaded:', this.envMap);
+        // Pass the environment map to shaders
+        for (let shader of this.shaders) {
+            shader.use();
+            gl.activeTexture(gl.TEXTURE0); // Use texture unit 0
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.envMap);
+            shader.setUniform1i('u_envMap', 0); // Bind to texture unit 0
+            shader.unuse();
+        }
+        this.skybox = new Skybox3D(gl, this.shaders[5], this.envMap)
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.envMap);
+
         // Declare a variable to hold a Scene
         // Scene files can be loaded through the UI (see below)
         this.scene = null
@@ -76,13 +113,14 @@ class WebGlApp
         this.updateViewSpaceVectors()
         this.view = mat4.lookAt(mat4.create(), this.eye, this.center, this.up)
 
+
         // Create the projection matrix
         this.fovy = 60
         this.aspect = 16/9
         this.near = 0.001
         this.far = 1000.0
         this.projection = mat4.perspective(mat4.create(), deg2rad(this.fovy), this.aspect, this.near, this.far)
-
+        
         // Use the shader's setUniform4x4f function to pass the matrices
         for (let shader of this.shaders) {
             shader.use()
@@ -92,6 +130,17 @@ class WebGlApp
             shader.unuse()
             
         }
+        this.skyboxViewMatrix = mat4.clone(this.view);
+        this.skyboxViewMatrix[12] = 0; // Remove translation (x)
+        this.skyboxViewMatrix[13] = 0; // Remove translation (y)
+        this.skyboxViewMatrix[14] = 0; // Remove translation (z)
+        
+        this.shaders[5].use(); // Use the skybox shader
+        this.shaders[5].setUniform4x4f('u_v', this.skyboxViewMatrix);
+        this.shaders[5].setUniform4x4f('u_p', this.projection); // Projection matrix
+        this.shaders[5].setUniform3f('u_eye', this.eye); // Camera position
+        this.shaders[5].unuse();
+
 
     }  
 
@@ -111,6 +160,34 @@ class WebGlApp
         gl.enable(gl.DEPTH_TEST)
 
     }
+
+    setupShaderUniforms(gl, shader) {
+        shader.use();
+    
+        // Pass camera position
+        shader.setUniform3f('u_eye', this.eye);
+    
+        // Global lights
+        this.lights.ambient.forEach((light, i) => {
+            shader.setUniform3f(`u_lights_ambient[${i}].color`, light.color);
+            shader.setUniform1f(`u_lights_ambient[${i}].intensity`, light.intensity);
+        });
+    
+        this.lights.directional.forEach((light, i) => {
+            shader.setUniform3f(`u_lights_directional[${i}].direction`, light.direction);
+            shader.setUniform3f(`u_lights_directional[${i}].color`, light.color);
+            shader.setUniform1f(`u_lights_directional[${i}].intensity`, light.intensity);
+        });
+    
+        this.lights.point.forEach((light, i) => {
+            shader.setUniform3f(`u_lights_point[${i}].position`, light.position);
+            shader.setUniform3f(`u_lights_point[${i}].color`, light.color);
+            shader.setUniform1f(`u_lights_point[${i}].intensity`, light.intensity);
+        });
+    
+        shader.unuse();
+    }
+    
 
     /**
      * Sets the viewport of the canvas to fill the whole available space so we draw to the whole canvas
@@ -369,21 +446,29 @@ class WebGlApp
      * @param {Number} canvas_width The canvas width. Needed to set the viewport
      * @param {Number} canvas_height The canvas height. Needed to set the viewport
      */
-    render( gl, canvas_width, canvas_height )
-    {
-        // Set viewport and clear canvas
-        this.setViewport( gl, canvas_width, canvas_height )
-        this.clearCanvas( gl )
+    render(gl, canvas_width, canvas_height) {
+        // Set viewport and clear the canvas
+        gl.viewport(0, 0, canvas_width, canvas_height);
+        this.clearCanvas(gl);
 
-        // Render the box
-        // This will use the MVP that was passed to the shader
-        this.sphere.render( gl )
-        this.snowBase.render(gl)
-        this.bottom.render(gl)
-        // Render the scene
-        if (this.scene) this.scene.render( gl )
+        // Render the skybox
+        gl.depthMask(false);
+        this.skybox.render(gl);
+        gl.depthMask(true);
 
+        // Bind environment map
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.envMap);
+
+        // Render objects
+        this.sphere.render(gl);
+        this.snowBase.render(gl);
+        this.bottom.render(gl);
+
+        // Render the scene if loaded
+        if (this.scene) this.scene.render(gl);
     }
+    
 
 }
 

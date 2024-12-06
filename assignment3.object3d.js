@@ -32,8 +32,7 @@ class Object3D
         this.vertices = vertices
         this.vertices_buffer = null
         this.createVBO( gl )
-        console.log('Setting u_color to:', this.color);
-        console.log('Uniform location for u_color:', this.shader.getUniformLocation('u_color'));
+
     
         this.indices = indices
         this.index_buffer = null
@@ -43,11 +42,13 @@ class Object3D
 
         this.num_components_vec3 = 3
         this.num_components_vec2 = 2
+        
+        this.vertex_stride = (3 + 3 + 2) * Float32Array.BYTES_PER_ELEMENT; // Position + Normal + TextureCoords
 
-        this.vertex_array_object = null
-        this.createVAO( gl, shader )
+        this.vertex_array_object = null;
+        this.createVAO(gl, shader);
 
-        this.model_matrix = mat4.identity(mat4.create())
+        this.model_matrix = mat4.identity(mat4.create());
     }
 
     /**
@@ -142,6 +143,7 @@ class Object3D
      */
     createVBO( gl )
     {
+        
         this.vertices_buffer = gl.createBuffer( );
         gl.bindBuffer( gl.ARRAY_BUFFER, this.vertices_buffer )
         gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW )
@@ -291,7 +293,7 @@ class ShadedObject3D extends Object3D {
         this.shader.setUniform1i('u_material.map_kD', 0)
         this.shader.setUniform1i('u_material.map_nS', 1)
         this.shader.setUniform1i('u_material.map_norm', 2)
-
+        this.shader.setUniform1f('u_refractiveIndex', this.material.refractiveIndex || 1.0);
         // Activate and pass texture units if textures are present in the material
         if (this.material.hasMapKD()) {
             gl.activeTexture(gl.TEXTURE0)

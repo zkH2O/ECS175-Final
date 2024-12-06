@@ -59,11 +59,13 @@ class Cylinder3D extends Object3D {
         }
 
         super(gl, shader, vertices, indices, gl.TRIANGLES);
+        this.shader.use()
         this.shader.setUniform3f('u_color', this.color);
         console.log("Color set for object:", this.color);
 
         // Set the initial color
         this.setColor(color);
+        this.shader.unuse()
     }
 }
 

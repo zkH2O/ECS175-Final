@@ -13,6 +13,7 @@ class AppState {
             'Control': {
                 'Camera': document.getElementById('controlCamera'),
             },
+            'Select Scene Node': document.getElementById( 'selectSceneNodeSelect' ),
             '3D Scene': document.getElementById('openfileActionInput')
         };
 
@@ -20,6 +21,7 @@ class AppState {
         this.ui_state = {
             'Shading': '',
             'Control': '',
+            'Select Scene Node': ''
         };
 
         // Update UI with default values
@@ -27,6 +29,9 @@ class AppState {
         this.updateUI('Control', 'Camera');
 
         // Set asynchronous handlers
+        this.ui_categories['Select Scene Node'].onchange = () => {
+            this.ui_state['Select Scene Node'] = this.ui_categories['Select Scene Node'].value
+        }
         this.onOpen3DSceneCallback = null
         this.ui_categories['3D Scene'].onchange = (evt) => {
             if (this.onOpen3DSceneCallback == null)

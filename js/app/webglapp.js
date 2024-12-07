@@ -37,12 +37,11 @@ class WebGlApp
 
         // Store the shader(s)
         this.shaders = shaders // Collection of all shaders
-        this.sphere_shader = this.shaders[1]
         this.light_shader = this.shaders[this.shaders.length - 1]
         this.active_shader = 1
         
         // Create a sphere instance and create a variable to track its rotation
-        this.sphere = new Sphere3D( gl, this.sphere_shader )
+        this.sphere = new Sphere3D( gl, this.shaders[6])
         this.animation_step = 0
         this.sphere.shader.use();
         this.sphere.shader.setUniform1i('u_isGlass', true);

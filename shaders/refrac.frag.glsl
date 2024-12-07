@@ -57,6 +57,6 @@ void main() {
     // Combine scene content, reflection, and refraction using Fresnel
     vec3 refractedContribution = mix(sceneColor, refractedColor, fresnel);
     vec3 finalColor = mix(refractedContribution, reflectedColor, fresnel);
-    finalColor = pow(finalColor, vec3(1.0 / 2.2)); // Apply gamma correction
+    finalColor = pow(finalColor, vec3(1.0 / 2.2)); // Apply gamm rection
     o_fragColor = vec4(finalColor, 1.0);
 }

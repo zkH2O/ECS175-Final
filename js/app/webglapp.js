@@ -59,11 +59,16 @@ class WebGlApp
         this.snowBase.shader.unuse()
 
         //creating the bottom platform
-        this.bottom = new Box3D(gl, this.shaders[4])
+        this.bottom = new Box3D(gl, this.shaders[7])
         this.bottom.setPosition(0, -0.93, 0);
         this.bottom.setScale([1.45, 0.53, 1.45]); // Stretch it vertically
         this.bottom.setRotation(Math.PI / 4, [0, 1, 0]); // Rotate around Y-axis
         this.bottom.setColor([0.0 ,0.0 ,0.0])
+        this.bottom.shader.use();
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.envMap);
+        this.bottom.shader.setUniform1i('u_envMap', 0); // Texture unit 0
+        this.bottom.shader.unuse();
 
         // loading cubemap
         //doing the skybox yippeee

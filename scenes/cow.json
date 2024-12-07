@@ -2,7 +2,7 @@
     "models": [
         {
             "name": "cow",
-            "obj": "./models/cow/cow.obj"
+            "obj": "./models/Aggie Mental Health Cow/cow.obj"
         }
     ],
     "lights": [
@@ -49,8 +49,8 @@
                         "type": "light",
                         "content": "directional1",
                         "transformation": {
-                            "translation": [0, 0, 1.5],
-                            "rotation": [90,0,90]
+                            "translation": [-1.5, 0, 0],
+                            "rotation": [25, 25, 90]
                         }
                     },
                     {
@@ -63,7 +63,6 @@
                     }
                 ]
             }
-
         ]
     }
 }

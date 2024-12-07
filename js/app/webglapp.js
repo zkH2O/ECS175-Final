@@ -493,25 +493,37 @@ class WebGlApp
         // Set viewport and clear the canvas
         gl.viewport(0, 0, canvas_width, canvas_height);
         this.clearCanvas(gl);
-
-        // Render the skybox
+    
+        // Step 1: Render the scene into the framebuffer (excluding the sphere)
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+        this.clearCanvas(gl);
+    
+        // Render the scene objects into the framebuffer
+        this.snowBase.render(gl); // Snow layer
+        if (this.scene) this.scene.render(gl); // Scene objects
+        this.bottom.render(gl); // Bottom platform
+    
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null); // Return to default framebuffer
+    
+        // Step 2: Render the skybox as the background
         gl.depthMask(false);
-        this.skybox.render(gl);
+        this.skybox.render(gl); // Render skybox
         gl.depthMask(true);
-
-        // Bind environment map
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.envMap);
-
-        // Render objects
-
-        this.snowBase.render(gl);
-        this.bottom.render(gl);
-        this.sphere.render(gl);
-
-        // Render the scene if loaded
-        if (this.scene) this.scene.render(gl);
+    
+        // Step 3: Render the sphere with refraction effect
+        gl.activeTexture(gl.TEXTURE1); // Use texture unit 1 for the framebuffer texture
+        gl.bindTexture(gl.TEXTURE_2D, this.framebufferTexture);
+    
+        this.sphere.shader.use();
+        this.sphere.shader.setUniform1i('u_sceneTexture', 1);
+        this.sphere.render(gl); // Render the sphere with refraction
+        this.sphere.shader.unuse();
+        // Step 4: Render objects in front of the sphere if needed (optional)
+        this.snowBase.render(gl); // Re-render snowBase if it overlaps the sphere
+        this.bottom.render(gl);   // Re-render bottom if it overlaps the sphere
+        if (this.scene) this.scene.render(gl); // Re-render scene if it overlaps the sphere
     }
+    
     
 
 }

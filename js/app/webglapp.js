@@ -41,12 +41,12 @@ class WebGlApp
         this.active_shader = 1
         
         // Create a sphere instance and create a variable to track its rotation
-        this.sphere = new Sphere3D( gl, this.shaders[1])
+        this.sphere = new Sphere3D( gl, this.shaders[6])
         this.animation_step = 0
         this.sphere.shader.use();
         this.sphere.shader.setUniform1i('u_isGlass', true);
         this.sphere.shader.setUniform1f('u_refractiveIndex', 1.5); // Glass index
-        this,this.sphere.setDrawMode(gl.TRIANGLES)
+        this.sphere.setDrawMode(gl.TRIANGLES)
         this.sphere.shader.unuse();
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);

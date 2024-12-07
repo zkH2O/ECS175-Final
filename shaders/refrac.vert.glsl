@@ -12,6 +12,6 @@ out vec3 v_worldPos; // World position of the vertex
 void main() {
     vec4 worldPos = u_model * vec4(a_position, 1.0);
     v_worldPos = worldPos.xyz;
-    v_normal = mat3(u_model) * a_normal; // Transform normal to world space
+    v_normal = mat3(transpose(inverse(u_model))) * a_normal; // Transform normal to world space
     gl_Position = u_mvp * vec4(a_position, 1.0);
 }

@@ -46,7 +46,7 @@ class WebGlApp
 
         // Store shaders
         this.shaders = shaders;
-        this.refractionShader = this.shaders[7]; // New refraction shader
+        this.refractionShader = this.shaders[0]; // New refraction shader
         this.skyboxShader = this.shaders[5];
 
         this.active_shader = 1;
@@ -105,6 +105,10 @@ class WebGlApp
 
         // Framebuffer setup
         this.initializeFramebuffer(gl);
+        console.log(gl.checkFramebufferStatus(gl.FRAMEBUFFER))
+        console.log("Framebuffer status:", gl.checkFramebufferStatus(gl.FRAMEBUFFER));
+        console.log("Color attachment:", gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE));
+        console.log("Depth attachment:", gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE));
 
         // View and projection matrices
         this.eye = [2.0, 0.5, -2.0];
@@ -147,25 +151,49 @@ class WebGlApp
     initializeFramebuffer(gl) {
         this.framebuffer = gl.createFramebuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
-
+    
+        // Create and attach the color texture
         this.framebufferTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.framebufferTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.canvas.width, gl.canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.canvas.width,
+            gl.canvas.height,
+            0,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            null
+        );
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.framebufferTexture2D(
+            gl.FRAMEBUFFER,
+            gl.COLOR_ATTACHMENT0,
+            gl.TEXTURE_2D,
+            this.framebufferTexture,
+            0
+        );
 
+        // Create and attach the depth buffer
         const depthBuffer = gl.createRenderbuffer();
         gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
         gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, gl.canvas.width, gl.canvas.height);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.framebufferTexture, 0);
         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
-
-        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-            console.error("Framebuffer setup failed.");
+    
+        // Check framebuffer completeness
+        const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+        if (status !== gl.FRAMEBUFFER_COMPLETE) {
+            console.error("Framebuffer is incomplete. Status:", status);
+        } else {
+            console.log("Framebuffer is complete.");
         }
-
+    
+        // Cleanup
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
+    
     /**
      * Sets up GL flags
      * In this assignment we are drawing 3D data, so we need to enable the flag 
@@ -509,10 +537,13 @@ class WebGlApp
         // Step 2: Render the sphere with refraction effect
         gl.activeTexture(gl.TEXTURE1); // Bind framebuffer texture to texture unit 1
         gl.bindTexture(gl.TEXTURE_2D, this.framebufferTexture);
-    
+        console.log("Framebuffer status:", gl.checkFramebufferStatus(gl.FRAMEBUFFER));
+        console.log("Color attachment:", gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE));
+        console.log("Depth attachment:", gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE));
+
         this.sphere.shader.use();
         this.sphere.shader.setUniform1i('u_sceneTexture', 1); // Texture unit 1
-        this.sphere.shader.setUniform1f('u_refractiveIndex', 2.4); // Refractive index
+        this.sphere.shader.setUniform1f('u_refractiveIndex', 1.5); // Refractive index
         this.sphere.shader.setUniform3f('u_absorption', [0.5, 0.5, 0.3]); // Absorption values
         this.sphere.shader.unuse();
         this.sphere.render(gl);

@@ -42,7 +42,5 @@ void main() {
 
     // Combine reflection and refraction using Fresnel
     vec3 finalColor = mix(refractedColor, reflectedColor, fresnel);
-
     o_fragColor = vec4(normalize(v_normal) * 0.5 + 0.5, 1.0);
- // Output color
-}
+

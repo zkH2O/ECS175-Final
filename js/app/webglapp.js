@@ -29,10 +29,11 @@ class WebGlApp
      * @param {Map<String,Shader>} shader The shaders to be used to draw the object
      * @param {AppState} app_state The state of the UI
      */
-    constructor( gl, shaders, app_state )
-    {
+    constructor(gl, shaders, app_state) {
         // Set GL flags
-        this.setGlFlags( gl )
+        this.setGlFlags(gl);
+
+        //matrices
 
 
         // Store the shader(s)
@@ -44,105 +45,118 @@ class WebGlApp
         this.sphere = new Sphere3D( gl, this.shaders[6])
         this.animation_step = 0
         this.sphere.shader.use();
-        this.sphere.shader.setUniform1i('u_isGlass', true);
-        this.sphere.shader.setUniform1f('u_refractiveIndex', 1.5); // Glass index
-        this,this.sphere.setDrawMode(gl.TRIANGLES)
+        this.sphere.setPosition(0, 0, 0); // Centered at origin
+        this.sphere.setScale([1.0, 1.0, 1.0]); // Default scale
+        this.sphere.shader.setUniform1f('u_refractiveIndex', 1.5); // Refraction index
+        this.sphere.setDrawMode(gl.TRIANGLES);
+        this.sphere.shader.setUniform1f('u_refractiveIndex', 1.5); // Glass-like refractive index
+        this.sphere.shader.setUniform1f('u_roughness', 0.2);       // Slight roughness for realistic distortion
+        this.sphere.shader.setUniform3f('u_absorption', [0.2, 0.1, 0.05]); // Reddish absorption effect
         this.sphere.shader.unuse();
+
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-        //Creatating small snow layer
+        // Create snow base
         this.snowBase = new Cylinder3D(gl, this.shaders[4], 0.76, 0.01);
         this.snowBase.shader.use();
         this.snowBase.setPosition(0, -0.66, 0);
-        this.snowBase.setColor([150.0, 149.0, 146.0])
-        this.snowBase.shader.unuse()
+        this.snowBase.setColor([150.0, 149.0, 146.0]);
+        this.snowBase.shader.unuse();
 
-        //creating the bottom platform
-        this.bottom = new Box3D(gl, this.shaders[4])
+        // Create bottom platform
+        this.bottom = new Box3D(gl, this.shaders[4]);
         this.bottom.setPosition(0, -0.93, 0);
-        this.bottom.setScale([1.45, 0.53, 1.45]); // Stretch it vertically
-        this.bottom.setRotation(Math.PI / 4, [0, 1, 0]); // Rotate around Y-axis
-        this.bottom.setColor([0.0 ,0.0 ,0.0])
+        this.bottom.setScale([1.45, 0.53, 1.45]);
+        this.bottom.setRotation(Math.PI / 4, [0, 1, 0]);
+        this.bottom.setColor([0.0, 0.0, 0.0]);
 
-        // loading cubemap
-        //doing the skybox yippeee
+        // Load cube map for skybox
         this.cubeMapFaces = [
-            '../../textures/px.png', // +x
-            '../../textures/nx.png', // -x
-            '../../textures/py.png', // +y
-            '../../textures/ny.png', // -y
-            '../../textures/pz.png', // +z
-            '../../textures/nz.png'  // -z
+            '../../textures/px.png',
+            '../../textures/nx.png',
+            '../../textures/py.png',
+            '../../textures/ny.png',
+            '../../textures/pz.png',
+            '../../textures/nz.png',
         ];
         this.envMap = CubeMapLoader.load(gl, this.cubeMapFaces);
         console.log('Environment Map Loaded:', this.envMap);
-        // Pass the environment map to shaders
+
+        // Pass cube map to shaders
         for (let shader of this.shaders) {
             shader.use();
-            gl.activeTexture(gl.TEXTURE0); // Use texture unit 0
+            gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.envMap);
-            shader.setUniform1i('u_envMap', 0); // Bind to texture unit 0
+            shader.setUniform1i('u_envMap', 0);
             shader.unuse();
         }
-        this.skybox = new Skybox3D(gl, this.shaders[5], this.envMap)
 
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.envMap);
+        this.skybox = new Skybox3D(gl, this.skyboxShader, this.envMap);
 
-        // Declare a variable to hold a Scene
-        // Scene files can be loaded through the UI (see below)
-        this.scene = null
+        // Framebuffer setup
+        this.initializeFramebuffer(gl);
 
-        // Bind a callback to the file dialog in the UI that loads a scene file
-        app_state.onOpen3DScene((filename) => {
-            let scene_config = JSON.parse(loadExternalFile(`./scenes/${filename}`))
-            this.scene = new Scene(scene_config, gl, this.shaders[this.active_shader], this.light_shader)
-            return this.scene
-        })
+        // View and projection matrices
+        this.eye = [2.0, 0.5, -2.0];
+        this.center = [0, 0, 0];
+        this.updateViewSpaceVectors();
 
-        // Create the view matrix
-        this.eye     =   [2.0, 0.5, -2.0]
-        this.center  =   [0, 0, 0]
-       
-        this.forward =   null
-        this.right   =   null
-        this.up      =   null
-        // Forward, Right, and Up are initialized based on Eye and Center
-        this.updateViewSpaceVectors()
-        this.view = mat4.lookAt(mat4.create(), this.eye, this.center, this.up)
-
-
-        // Create the projection matrix
-        this.fovy = 60
-        this.aspect = 16/9
-        this.near = 0.001
-        this.far = 1000.0
-        this.projection = mat4.perspective(mat4.create(), deg2rad(this.fovy), this.aspect, this.near, this.far)
-        
-        // Use the shader's setUniform4x4f function to pass the matrices
-        for (let shader of this.shaders) {
-            shader.use()
-            shader.setUniform3f('u_eye', this.eye);
-            shader.setUniform4x4f('u_v', this.view)
-            shader.setUniform4x4f('u_p', this.projection)
-            shader.unuse()
-            
-        }
+        this.view = mat4.lookAt(mat4.create(), this.eye, this.center, this.up);
         this.skyboxViewMatrix = mat4.clone(this.view);
-        this.skyboxViewMatrix[12] = 0; // Remove translation (x)
-        this.skyboxViewMatrix[13] = 0; // Remove translation (y)
-        this.skyboxViewMatrix[14] = 0; // Remove translation (z)
+        this.skyboxViewMatrix[12] = 0;
+        this.skyboxViewMatrix[13] = 0;
+        this.skyboxViewMatrix[14] = 0;
+
+        this.fovy = 60;
+        this.aspect = 16 / 9;
+        this.near = 0.001;
+        this.far = 1000.0;
+        this.projection = mat4.perspective(mat4.create(), deg2rad(this.fovy), this.aspect, this.near, this.far);
+
+        // Pass matrices to shaders
+        for (let shader of this.shaders) {
+            shader.use();
+            shader.setUniform3f('u_eye', this.eye);
+            shader.setUniform4x4f('u_v', this.view);
+            shader.setUniform4x4f('u_p', this.projection);
+            shader.unuse();
+        }
+         // Compute MVP matrix
+        mat4.multiply(this.mvpMatrix, this.viewMatrix, this.modelMatrix); // View * Model
+        mat4.multiply(this.mvpMatrix, this.projectionMatrix, this.mvpMatrix); // Projection * (View * Model)
         
-        this.shaders[5].use(); // Use the skybox shader
-        this.shaders[5].setUniform4x4f('u_v', this.skyboxViewMatrix);
-        this.shaders[5].setUniform4x4f('u_p', this.projection); // Projection matrix
-        this.shaders[5].setUniform3f('u_eye', this.eye); // Camera position
-        this.shaders[5].unuse();
+        this.skyboxShader.use();
+        this.skyboxShader.setUniform4x4f('u_v', this.skyboxViewMatrix);
+        this.skyboxShader.setUniform4x4f('u_p', this.projection);
+        this.skyboxShader.setUniform4x4f('u_model', this.modelMatrix);
+        this.skyboxShader.setUniform4x4f('u_mvp', this.mvpMatrix);
 
+        this.skyboxShader.unuse();
+    }
 
-    }  
+    initializeFramebuffer(gl) {
+        this.framebuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
 
+        this.framebufferTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.framebufferTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.canvas.width, gl.canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+        const depthBuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, gl.canvas.width, gl.canvas.height);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.framebufferTexture, 0);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
+
+        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+            console.error("Framebuffer setup failed.");
+        }
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
     /**
      * Sets up GL flags
      * In this assignment we are drawing 3D data, so we need to enable the flag 
@@ -466,24 +480,47 @@ class WebGlApp
         // Set viewport and clear the canvas
         gl.viewport(0, 0, canvas_width, canvas_height);
         this.clearCanvas(gl);
-
-        // Render the skybox
-        gl.depthMask(false);
+    
+        // Step 1: Render the entire scene (excluding the sphere) into the framebuffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer); // Bind framebuffer
+        this.clearCanvas(gl); // Clear the framebuffer
+        
+        // Render the skybox into the framebuffer
+        gl.depthMask(false); // Disable depth mask for skybox
         this.skybox.render(gl);
-        gl.depthMask(true);
-
-        // Bind environment map
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.envMap);
-
-        // Render objects
-        this.sphere.render(gl);
+        gl.depthMask(true); // Re-enable depth mask
+    
+        // Render other objects (e.g., snowBase and bottom) into the framebuffer
         this.snowBase.render(gl);
         this.bottom.render(gl);
-
-        // Render the scene if loaded
+    
+        // Unbind the framebuffer to return to default rendering
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    
+        // Step 2: Render the sphere with refraction effect
+        gl.activeTexture(gl.TEXTURE1); // Bind framebuffer texture to texture unit 1
+        gl.bindTexture(gl.TEXTURE_2D, this.framebufferTexture);
+    
+        this.sphere.shader.use();
+        this.sphere.shader.setUniform1i('u_sceneTexture', 1); // Texture unit 1
+        this.sphere.shader.setUniform1f('u_refractiveIndex', 2.4); // Refractive index
+        this.sphere.shader.setUniform3f('u_absorption', [0.5, 0.5, 0.3]); // Absorption values
+        this.sphere.shader.unuse();
+        this.sphere.render(gl);
+    
+        // Step 3: Render the skybox again to cover the scene
+        gl.depthMask(false); // Disable depth mask for skybox
+        this.skybox.render(gl);
+        gl.depthMask(true); // Re-enable depth mask
+    
+        // Step 4: Render the remaining objects
         if (this.scene) this.scene.render(gl);
+        this.snowBase.render(gl); // Render snowBase again if needed
+        this.bottom.render(gl);  // Render bottom again if needed
+        this.sphere.render(gl);
     }
+    
+    
     
 
 }

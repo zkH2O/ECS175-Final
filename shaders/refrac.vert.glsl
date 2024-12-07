@@ -15,3 +15,5 @@ void main() {
     v_normal = mat3(transpose(inverse(u_model))) * a_normal; // Transform normal to world space
     gl_Position = u_mvp * vec4(a_position, 1.0);
 }
+
+

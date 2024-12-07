@@ -45,7 +45,7 @@ class WebGlApp
         this.animation_step = 0
         this.sphere.shader.use();
         this.sphere.shader.setUniform1i('u_isGlass', true);
-        this.sphere.shader.setUniform1f('u_refractiveIndex', 1.5); // Glass index
+        this.sphere.shader.setUniform1f('u_refractiveIndex', 1); // Glass index
         this.sphere.setDrawMode(gl.TRIANGLES)
         this.sphere.shader.unuse();
         gl.enable(gl.BLEND);
@@ -76,7 +76,7 @@ class WebGlApp
             '../../textures/nz.png'  // -z
         ];
         this.envMap = CubeMapLoader.load(gl, this.cubeMapFaces);
-        console.log('Environment Map Loaded:', this.envMap);
+
         // Pass the environment map to shaders
         for (let shader of this.shaders) {
             shader.use();
@@ -139,9 +139,36 @@ class WebGlApp
         this.shaders[5].setUniform4x4f('u_p', this.projection); // Projection matrix
         this.shaders[5].setUniform3f('u_eye', this.eye); // Camera position
         this.shaders[5].unuse();
-
-
+        this.initializeFramebuffer(gl);
+        
     }  
+
+    initializeFramebuffer(gl) {
+        this.framebuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+    
+        // Create texture to store color
+        this.framebufferTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.framebufferTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.canvas.width, gl.canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    
+        // Create a renderbuffer for depth
+        this.depthBuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthBuffer);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, gl.canvas.width, gl.canvas.height);
+    
+        // Attach texture and renderbuffer to framebuffer
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.framebufferTexture, 0);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depthBuffer);
+    
+        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+            console.error("Framebuffer is not complete.");
+        }
+    
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
 
     /**
      * Sets up GL flags
@@ -477,9 +504,10 @@ class WebGlApp
         gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.envMap);
 
         // Render objects
-        this.sphere.render(gl);
+
         this.snowBase.render(gl);
         this.bottom.render(gl);
+        this.sphere.render(gl);
 
         // Render the scene if loaded
         if (this.scene) this.scene.render(gl);

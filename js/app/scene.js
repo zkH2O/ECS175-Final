@@ -137,7 +137,35 @@ class Scene {
      * @param {Shader} light_shader The shader to be used to draw the object
      * @returns {Light} An instance of Light
      */
+    instantiateLight( name, gl, shader, light_shader ) {
+        if (!(name in this.lights))
+            throw `Unable to find light "${name}" requested by scenegraph`
 
+        // Update light counts
+        if (!(this.lights[name].type in this.light_counts))
+            this.light_counts[this.lights[name].type] = -1
+        this.light_counts[this.lights[name].type] += 1
+
+        // Retrieve light config
+        let light = this.lights[name]
+
+        // Get light's color
+        let color = light.color[0] == '#' ? hex2rgb(light.color) : light.color
+
+        switch(light.type) {
+            case 'ambient':
+                return new AmbientLight( this.light_counts[this.lights[name].type], color, light.intensity, shader, gl, light_shader )
+
+            case 'point':
+                return new PointLight( this.light_counts[this.lights[name].type], color, light.intensity, shader, gl, light_shader )
+
+            case 'directional':
+                return new DirectionalLight( this.light_counts[this.lights[name].type], color, light.intensity, shader, gl, light_shader )
+            
+            default:
+                throw `Unsupoorted light type "${light.type}" for light "${light.name}"`
+        }
+    }
 
     /**
      * Recursively loads a node in the scenegraph
@@ -166,6 +194,14 @@ class Scene {
             case 'model': // Geometry node containing a model
                 node = new ModelNode(
                     this.instantiateModel(node_config.content, gl, shader), // Field "content" refers to the model to be associated with this node
+                    node_config.name,
+                    node_config.type,
+                    'transformation' in node_config ? json2transform(node_config.transformation) : mat4.create()
+                )
+                break
+            case 'light': // Light node containing a light
+                node = new LightNode(
+                    this.instantiateLight(node_config.content, gl, shader, light_shader), // Field "content" refers to the light to be associated with this node
                     node_config.name,
                     node_config.type,
                     'transformation' in node_config ? json2transform(node_config.transformation) : mat4.create()

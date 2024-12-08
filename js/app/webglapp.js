@@ -38,7 +38,7 @@ class WebGlApp
         // Store the shader(s)
         this.shaders = shaders // Collection of all shaders
         this.light_shader = this.shaders[this.shaders.length - 1]
-        this.active_shader = 1
+        this.active_shader = 2
         
         // Create a sphere instance and create a variable to track its rotation
         this.sphere = new Sphere3D( gl, this.shaders[6])
@@ -259,41 +259,6 @@ class WebGlApp
      */
     update( gl, app_state, delta_time ) 
     {
-        // Shader
-        if (this.scene != null) {
-            let old_active_shader = this.active_shader
-            switch(app_state.getState('Shading')) {
-                case 'Phong':
-                    this.active_shader = 1
-                    break
-                case 'Textured':
-                    this.active_shader = 2
-                    break
-            }
-            if (old_active_shader != this.active_shader) {
-                this.scene.resetLights( this.shaders[this.active_shader] )
-                for (let node of this.scene.getNodes()) {
-                    if (node.type == 'model')
-                        node.setShader(gl, this.shaders[this.active_shader])
-                    if (node.type == 'light') 
-                        node.setTargetShader(this.shaders[this.active_shader])
-                }
-            }
-        }
-
-        // Shader Debug
-        switch(app_state.getState('Shading Debug')) {
-            case 'Normals':
-                this.shaders[this.active_shader].use()
-                this.shaders[this.active_shader].setUniform1i('u_show_normals', 1)
-                this.shaders[this.active_shader].unuse()
-                break
-            default:
-                this.shaders[this.active_shader].use()
-                this.shaders[this.active_shader].setUniform1i('u_show_normals', 0)
-                this.shaders[this.active_shader].unuse()
-                break
-        }
 
         // Control
         switch(app_state.getState('Control')) {

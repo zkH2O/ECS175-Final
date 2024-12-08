@@ -6,5 +6,5 @@ out vec4 o_fragColor;
 
 void main() {
     // Simple white color for snow
-    o_fragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    o_fragColor = vec4(0.9, 0.9, 0.9, 1.0);
 }

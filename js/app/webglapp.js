@@ -61,9 +61,9 @@ class WebGlApp
         this.snowBase.shader.unuse()
         this.particleEmitter = new Emitter(
             [0, 0.9, 0], // Center of the globe
-            300,      // Max particles
-            40,        // Emission rate
-            5.0,        // Particle lifespan
+            400,      // Max particles
+            30,        // Emission rate
+            10.0,        // Particle lifespan
             this.snowBase.getPosition()
         );
         //creating the bottom platform
@@ -269,7 +269,7 @@ class WebGlApp
     {
         if (this.particleEmitter) {
             const globeModelMatrix = this.sphere.model_matrix; // Access sphere's model matrix
-            this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.5); // Pass matrix to the emitter
+            this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.72); // Pass matrix to the emitter
         }
         
         // Control

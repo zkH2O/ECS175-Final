@@ -95,6 +95,10 @@ class Object3D
         mat4.translate(this.model_matrix, this.model_matrix, [x, y, z]);
     }
 
+    getPosition() {
+        return [this.model_matrix[12], this.model_matrix[13], this.model_matrix[14]]
+    }
+
     // Function to set the scale
     setScale(scale) {
         mat4.scale(this.model_matrix, this.model_matrix, scale);

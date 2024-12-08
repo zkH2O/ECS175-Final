@@ -60,7 +60,7 @@ class WebGlApp
         this.snowBase.setColor([150.0, 149.0, 146.0])
         this.snowBase.shader.unuse()
         this.particleEmitter = new Emitter(
-            [0, 1, 0], // Center of the globe
+            [0, 0.9, 0], // Center of the globe
             300,      // Max particles
             40,        // Emission rate
             5.0,        // Particle lifespan

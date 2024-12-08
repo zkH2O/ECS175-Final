@@ -77,13 +77,6 @@ class Emitter {
         // Remove dead particles
         this.particles = this.particles.filter((p) => !p.isDead());
     }
-    
-    
-    
-
-    
-    
-
 
     render(gl, shader) {
         // Use instancing or buffer updates to render all particles in one draw call

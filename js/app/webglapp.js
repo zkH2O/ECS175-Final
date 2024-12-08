@@ -61,9 +61,9 @@ class WebGlApp
         this.snowBase.shader.unuse()
         this.particleEmitter = new Emitter(
             [0, 1, 0], // Center of the globe
-            300,      // Max particles
-            40,        // Emission rate
-            5.0,        // Particle lifespan
+            10,      // Max particles
+            6,        // Emission rate
+            3.0,        // Particle lifespan
             this.snowBase.getPosition()
         );
         //creating the bottom platform

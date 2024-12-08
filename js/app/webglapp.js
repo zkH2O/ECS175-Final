@@ -7,6 +7,7 @@ import Box3D from './box3d.js'
 import Input from '../input/input.js'
 import CubeMapLoader from './cubemaploader.js';
 import Skybox3D from './skybox3d.js';
+import { ParticleSystem } from './particleSystem.js';
 import * as mat4 from '../lib/glmatrix/mat4.js'
 import * as vec3 from '../lib/glmatrix/vec3.js'
 import * as quat from '../lib/glmatrix/quat.js'
@@ -119,7 +120,7 @@ class WebGlApp
         this.near = 0.001
         this.far = 1000.0
         this.projection = mat4.perspective(mat4.create(), deg2rad(this.fovy), this.aspect, this.near, this.far)
-        
+        this.particleSystem = new ParticleSystem(gl, this.sphere, this.shaders[7]);
         // Use the shader's setUniform4x4f function to pass the matrices
         for (let shader of this.shaders) {
             shader.use()
@@ -129,6 +130,8 @@ class WebGlApp
             shader.unuse()
             
         }
+
+        
         this.skyboxViewMatrix = mat4.clone(this.view);
         this.skyboxViewMatrix[12] = 0; // Remove translation (x)
         this.skyboxViewMatrix[13] = 0; // Remove translation (y)
@@ -522,6 +525,11 @@ class WebGlApp
         this.snowBase.render(gl); // Re-render snowBase if it overlaps the sphere
         this.bottom.render(gl);   // Re-render bottom if it overlaps the sphere
         if (this.scene) this.scene.render(gl); // Re-render scene if it overlaps the sphere
+
+        // initialize webgl, shaders, etc.
+
+        this.particleSystem.updateParticles();
+        this.particleSystem.renderParticles(this.shaders[7]);
     }
     
     

@@ -40,12 +40,7 @@ class WebGlApp
         this.shaders = shaders // Collection of all shaders
         this.light_shader = this.shaders[this.shaders.length - 1]
         this.active_shader = 2
-        this.particleEmitter = new Emitter(
-            [0, 0.8, 0], // Center of the globe
-            1000,      // Max particles
-            50,        // Emission rate
-            5.0        // Particle lifespan
-        );
+
         // Create a sphere instance and create a variable to track its rotation
         this.sphere = new Sphere3D( gl, this.shaders[6])
         this.animation_step = 0
@@ -64,7 +59,13 @@ class WebGlApp
         this.snowBase.setPosition(0, -0.66, 0);
         this.snowBase.setColor([150.0, 149.0, 146.0])
         this.snowBase.shader.unuse()
-
+        this.particleEmitter = new Emitter(
+            [0, 1, 0], // Center of the globe
+            300,      // Max particles
+            40,        // Emission rate
+            5.0,        // Particle lifespan
+            this.snowBase.getPosition()
+        );
         //creating the bottom platform
         this.bottom = new Box3D(gl, this.shaders[7])
         this.bottom.setPosition(0, -0.93, 0);
@@ -268,7 +269,7 @@ class WebGlApp
     {
         if (this.particleEmitter) {
             const globeModelMatrix = this.sphere.model_matrix; // Access sphere's model matrix
-            this.particleEmitter.update(delta_time, globeModelMatrix); // Pass matrix to the emitter
+            this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.5); // Pass matrix to the emitter
         }
         
         // Control

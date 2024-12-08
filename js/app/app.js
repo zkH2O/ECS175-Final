@@ -4,7 +4,6 @@ import Input from '../input/input.js'
 import AppState from './appstate.js'
 import Shader from '../utils/shader.js'
 import WebGlApp from './webglapp.js'
-import Physics from './physics.js'
 
 class App
 {
@@ -48,13 +47,6 @@ class App
 
         // webgl app implementation
         this.impl = new WebGlApp( this.gl, this.shaders, this.app_state )
-
-        // physics system
-        console.log('Initializing Physics');
-        this.physics = new Physics(this.gl, this.app_state);
-        // initialize with 500 snowflakes
-        this.physics.initializeSnowflakes(500);
-
     }
 
     /**
@@ -104,8 +96,6 @@ class App
         this.app_state.update( )
         Input.update( )
 
-        this.physics.update(this.delta_time);
-
         this.impl.update( this.gl, this.app_state, this.delta_time )
         this.render( )
         requestAnimationFrame( ( ) =>
@@ -123,8 +113,6 @@ class App
     render( )
     {
         this.impl.render( this.gl, this.canvas.width, this.canvas.height )
-        // Render snowflakes
-        this.physics.render(this.gl);
     }
 
 }

@@ -347,6 +347,11 @@ class SceneNode {
         this.world_transformation = this.calculateWorldTransformation()
     }
 
+    updateWorldMatrix() {
+        // Update world transformation
+        this.world_transformation = this.calculateWorldTransformation();
+    }
+
     /**
      * Getter for the node's parent
      * 

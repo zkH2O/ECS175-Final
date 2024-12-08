@@ -30,7 +30,8 @@ class WebGlApp
      * @param {Map<String,Shader>} shader The shaders to be used to draw the object
      * @param {AppState} app_state The state of the UI
      */
-    constructor(gl, shaders, app_state) {
+    constructor( gl, shaders, app_state )
+    {
         // Set GL flags
         this.setGlFlags( gl )
 
@@ -48,7 +49,6 @@ class WebGlApp
         this.sphere.shader.setUniform1f('u_refractiveIndex', 1); // Glass index
         this.sphere.setDrawMode(gl.TRIANGLES)
         this.sphere.shader.unuse();
-
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -78,27 +78,30 @@ class WebGlApp
         this.bottom.shader.setUniform1i('u_envMap', 0); // Texture unit 0
         this.bottom.shader.unuse();
 
-        // Load cube map for skybox
+        // loading cubemap
+        //doing the skybox yippeee
         this.cubeMapFaces = [
-            '../../textures/px.png',
-            '../../textures/nx.png',
-            '../../textures/py.png',
-            '../../textures/ny.png',
-            '../../textures/pz.png',
-            '../../textures/nz.png',
+            '../../textures/px.png', // +x
+            '../../textures/nx.png', // -x
+            '../../textures/py.png', // +y
+            '../../textures/ny.png', // -y
+            '../../textures/pz.png', // +z
+            '../../textures/nz.png'  // -z
         ];
         this.envMap = CubeMapLoader.load(gl, this.cubeMapFaces);
 
         // Pass the environment map to shaders
         for (let shader of this.shaders) {
             shader.use();
-            gl.activeTexture(gl.TEXTURE0);
+            gl.activeTexture(gl.TEXTURE0); // Use texture unit 0
             gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.envMap);
-            shader.setUniform1i('u_envMap', 0);
+            shader.setUniform1i('u_envMap', 0); // Bind to texture unit 0
             shader.unuse();
         }
+        this.skybox = new Skybox3D(gl, this.shaders[5], this.envMap)
 
-        this.skybox = new Skybox3D(gl, this.skyboxShader, this.envMap);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.envMap);
 
         // Declare a variable to hold a Scene
         // Scene files can be loaded through the UI (see below)
@@ -139,15 +142,17 @@ class WebGlApp
         
         // Use the shader's setUniform4x4f function to pass the matrices
         for (let shader of this.shaders) {
-            shader.use();
+            shader.use()
             shader.setUniform3f('u_eye', this.eye);
-            shader.setUniform4x4f('u_v', this.view);
-            shader.setUniform4x4f('u_p', this.projection);
-            shader.unuse();
+            shader.setUniform4x4f('u_v', this.view)
+            shader.setUniform4x4f('u_p', this.projection)
+            shader.unuse()
+            
         }
-         // Compute MVP matrix
-        mat4.multiply(this.mvpMatrix, this.viewMatrix, this.modelMatrix); // View * Model
-        mat4.multiply(this.mvpMatrix, this.projectionMatrix, this.mvpMatrix); // Projection * (View * Model)
+        this.skyboxViewMatrix = mat4.clone(this.view);
+        this.skyboxViewMatrix[12] = 0; // Remove translation (x)
+        this.skyboxViewMatrix[13] = 0; // Remove translation (y)
+        this.skyboxViewMatrix[14] = 0; // Remove translation (z)
         
         this.shaders[5].use(); // Use the skybox shader
         this.shaders[5].setUniform4x4f('u_v', this.skyboxViewMatrix);
@@ -264,7 +269,12 @@ class WebGlApp
     {
         if (this.particleEmitter) {
             const globeModelMatrix = this.sphere.model_matrix; // Access sphere's model matrix
-            this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.5); // Pass matrix to the emitter
+            if (this.scene != null) {
+                this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.5, this.scene.getNodes()); // Pass matrix to the emitter
+            }
+            else {
+                this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.5, []);
+            }
         }
         
         // Control
@@ -508,9 +518,6 @@ class WebGlApp
         this.snowBase.render(gl);
 
         if (this.scene) this.scene.render(gl);
-        this.snowBase.render(gl); // Render snowBase again if needed
-        this.bottom.render(gl);  // Render bottom again if needed
-        this.sphere.render(gl);
     }
     
     

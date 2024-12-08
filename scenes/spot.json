@@ -1,7 +1,7 @@
 {
     "models": [
         {
-            "name": "cow",
+            "name": "spot",
             "obj": "./models/Spot/spot_triangulated.obj"
         }
     ],
@@ -28,9 +28,9 @@
     "scenegraph": {
         "name": "model_node",
         "type": "model",
-        "content": "cow",
+        "content": "spot",
         "transformation": {
-            "translation": [0.3, 0, -0.3],
+            "translation": [0.15, 0, -0.3],
             "rotation": [0, 0, 0],
             "scale": [0.7, 0.7, 0.7]
         },

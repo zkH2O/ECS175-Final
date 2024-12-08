@@ -98,7 +98,6 @@ class WebGlApp
         // Declare a variable to hold a Scene
         // Scene files can be loaded through the UI (see below)
         this.scene = null
-
         // Bind a callback to the file dialog in the UI that loads a scene file
         app_state.onOpen3DScene((filename) => {
             let scene_config = JSON.parse(loadExternalFile(`./scenes/${filename}`))
@@ -106,6 +105,14 @@ class WebGlApp
             return this.scene
         })
 
+        // Bind textures
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.envMap);
+        this.shaders[this.active_shader].setUniform1i('u_envMap', 1);
+
+        // Set reflectivity
+        this.shaders[this.active_shader].setUniform1f('u_reflectivity', 0.5); // Adjust as needed
+        this.shaders[this.active_shader].unuse()
         // Create the view matrix
         this.eye     =   [2.0, 0.5, -2.0]
         this.center  =   [0, 0, 0]
@@ -514,15 +521,15 @@ class WebGlApp
         gl.depthMask(false);
         this.skybox.render(gl); // Render skybox
         gl.depthMask(true);
-    
-        // Step 3: Render the sphere with refraction effect
-        gl.activeTexture(gl.TEXTURE1); // Use texture unit 1 for the framebuffer texture
-        gl.bindTexture(gl.TEXTURE_2D, this.framebufferTexture);
-    
         this.sphere.shader.use();
         this.sphere.shader.setUniform1i('u_sceneTexture', 1);
         this.sphere.render(gl); // Render the sphere with refraction
         this.sphere.shader.unuse();
+        // Step 3: Render the sphere with refraction effect
+        gl.activeTexture(gl.TEXTURE1); // Use texture unit 1 for the framebuffer texture
+        gl.bindTexture(gl.TEXTURE_2D, this.framebufferTexture);
+    
+
         // Step 4: Render objects in front of the sphere if needed (optional)
         this.snowBase.render(gl); // Re-render snowBase if it overlaps the sphere
         this.bottom.render(gl);   // Re-render bottom if it overlaps the sphere

@@ -67,10 +67,7 @@ class MTLLoader {
                 case 'map_Bump':
                 case 'bump':
                 case 'norm':
-                    let line_split = line.split(' ')
-                    let file_map_norm = line_split[line_split.length-1]
-                    materials[current_material].map_norm = new Texture(`${filepath}/${file_map_norm}`, gl)
-                    break
+
             }
         }
 

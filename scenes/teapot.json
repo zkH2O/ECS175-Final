@@ -1,7 +1,7 @@
 {
     "models": [
         {
-            "name": "cow",
+            "name": "teapot",
             "obj": "./models/Utah Teapot/teapot.obj"
         }
     ],
@@ -28,7 +28,7 @@
     "scenegraph": {
         "name": "model_node",
         "type": "model",
-        "content": "cow",
+        "content": "teapot",
         "transformation": {
             "translation": [0.33, 0.1, -0.55],
             "rotation": [0, 0, 0],

@@ -270,7 +270,7 @@ class WebGlApp
         if (this.particleEmitter) {
             const globeModelMatrix = this.sphere.model_matrix; // Access sphere's model matrix
             if (this.scene != null) {
-                this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.5, this.scene.getNodes()); // Pass matrix to the emitter
+                this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.5, this.scene.getMeshes()); // Pass matrix to the emitter
             }
             else {
                 this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.5, []);

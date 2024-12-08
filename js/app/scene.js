@@ -33,6 +33,7 @@ class Scene {
      */
     constructor(scene_config, gl, shader, light_shader) {
         this.scene_config = scene_config
+        this.meshes = []
 
         // First load the OBJ models
         this.models = 'models' in scene_config ? this.loadModels(scene_config.models, gl) : {}
@@ -86,7 +87,10 @@ class Scene {
         for (let model_config of models_config) {
             // Load the OBJ file
             let loader = new OBJLoader(model_config.obj)
-            models[model_config.name] = loader.load(gl)
+            const model = loader.load(gl)
+            models[model_config.name] = model[0]
+            this.meshes.push(model[1])
+            model[1].geometry.computeBoundingSphere()
         }
 
         return models
@@ -248,6 +252,10 @@ class Scene {
         if (node == null)
             throw `Node "${name}" not found in scenegraph`
         return node
+    }
+
+    getMeshes( ) {
+        return this.meshes
     }
 
     /**

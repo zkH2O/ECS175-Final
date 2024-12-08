@@ -18,9 +18,7 @@ class Particle {
     }
 
     // For bouncing off walls or objects
-    handleCollisions(globeRadius, sceneNodes) {
-        sceneNodes.forEach(node => node.updateWorldMatrix());
-
+    handleCollisions(globeRadius, meshes) {
         // If particle is outside globe, bounce back inside globe
         const distanceFromCenter = vec3.length(this.position);
         if (distanceFromCenter > globeRadius) {
@@ -31,26 +29,33 @@ class Particle {
             const penetrationDepth = distanceFromCenter - globeRadius;
             vec3.scaleAndAdd(this.position, this.position, normal, -penetrationDepth);
         }
+        else {
+            // Create a raycaster for collision detection
+            const raycaster = new THREE.Raycaster();
+            const particlePosition = new THREE.Vector3(this.position[0], this.position[1], this.position[2]);
 
-        // Handle collisions with 3D objects
-        for (const object of sceneNodes) {
-            const objectBoundingBox = new THREE.Box3().setFromObject(object);
-            const particlePosition = new THREE.Vector3(...this.position);
-    
-            if (objectBoundingBox.containsPoint(particlePosition)) {
-                const collisionNormal = new THREE.Vector3().subVectors(particlePosition, object.position).normalize();
-                const velocityDotNormal = this.velocity[0] * collisionNormal.x + this.velocity[1] * collisionNormal.y + this.velocity[2] * collisionNormal.z;
-                const reflection = collisionNormal.multiplyScalar(2 * velocityDotNormal);
-    
-                this.velocity[0] -= reflection.x;
-                this.velocity[1] -= reflection.y;
-                this.velocity[2] -= reflection.z;
-    
-                // Position the particle outside the object
-                const penetrationDepth = particlePosition.distanceTo(object.position) - objectBoundingBox.getSize(new THREE.Vector3()).length();
-                this.position[0] -= collisionNormal.x * penetrationDepth;
-                this.position[1] -= collisionNormal.y * penetrationDepth;
-                this.position[2] -= collisionNormal.z * penetrationDepth;
+            // Handle collisions with 3D objects
+            for (const node of meshes) {            
+                const boundingSphere = node.geometry.boundingSphere;
+                const distanceSquared = boundingSphere.center.distanceToSquared(particlePosition);
+                if (distanceSquared <= Math.pow(boundingSphere.radius, 2)) {
+                    // Handle intersection logic here
+                    // If particle is within bounding volume, perform detailed collision check
+                    // const worldMatrix = node.matrixWorld;
+                    // node.geometry.applyMatrix4(worldMatrix);
+
+                    raycaster.ray.origin.copy(particlePosition);
+                    raycaster.ray.direction.copy(this.velocity); 
+
+                    const intersects = raycaster.intersectObject(node);
+
+                    if (intersects.length > 0) {
+                        const intersection = intersects[0];
+                        const normal = intersection.face.normal;
+                        this.velocity.reflect(normal);
+                        this.position.set(intersection.point.x, intersection.point.y, intersection.point.z);
+                    }
+                }
             }
         }
     }
@@ -61,7 +66,7 @@ class Particle {
         this.position[1] = snowBaseHeight; // Adjust position to floor level
     }
 
-    update(deltaTime, globeRadius, sceneNodes) {
+    update(deltaTime, globeRadius, meshes) {
         // Update the age of the particle
         this.age += deltaTime;
 
@@ -75,7 +80,7 @@ class Particle {
             this.settleParticle(this.snowBasePosition[1]);
         }
 
-        this.handleCollisions(globeRadius, sceneNodes);
+        this.handleCollisions(globeRadius, meshes);
     }
 }
 

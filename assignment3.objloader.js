@@ -3,6 +3,7 @@
 import { loadExternalFile, getFileDir } from './js/utils/utils.js'
 import { MTLLoader } from './assignment3.mtlloader.js'
 import Material from './js/app/material.js'
+import * as THREE from '/node_modules/three/build/three.module.js';
 
 import * as vec3 from './js/lib/glmatrix/vec3.js'
 import * as vec2 from './js/lib/glmatrix/vec2.js'
@@ -115,7 +116,41 @@ class OBJLoader {
                 vertex_data.push(texture_coord)
         }
 
-        return [ vertex_data, position_indices, material ]
+        const geometry = new THREE.BufferGeometry();
+
+        // Convert vertex data to Float32Arrays
+        let positions = new Float32Array(vertex_positions.length);
+        let normals = new Float32Array(vertex_normals.length);
+        let indices = [];
+        
+        // Fill positions and normals
+        for (let i = 0; i < vertex_positions.length; i++) {
+            positions[i] = vertex_positions[i];
+        }
+        for (let i = 0; i < vertex_normals.length; i++) {
+            normals[i] = vertex_normals[i];
+        }
+        
+        // Set the attributes on the geometry
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3)); // Positions
+        geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3)); // Normals
+        
+        // Indices for faces
+        for (let i = 0; i < position_indices.length; i++) {
+            indices.push(position_indices[i]);
+        }
+        
+        // Set indices
+        geometry.setIndex(indices);
+        
+        // Create material and mesh as before
+        const mat = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+        const mesh = new THREE.Mesh(geometry, mat);
+        
+        // Return the result
+        const result = [[vertex_data, position_indices, material], mesh];
+        console.log(result);
+        return result;        
     }
 
     /**

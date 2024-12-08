@@ -2,7 +2,6 @@
 
 import { Particle } from './particle.js';
 import * as vec3 from '../lib/glmatrix/vec3.js'
-import * as THREE from '/node_modules/three/build/three.module.js';
 
 class Emitter {
     constructor(position, maxParticles, emissionRate, particleLifetime, snowBasePosition) {
@@ -16,7 +15,7 @@ class Emitter {
         this.elapsedTime = 0;
     }
 
-    update(deltaTime, globeModelMatrix, globeRadius, snowBaseRadius, sceneNodes) {
+    update(deltaTime, globeModelMatrix, globeRadius, snowBaseRadius, meshes) {
         this.elapsedTime += deltaTime;
         const particlesToEmit = Math.floor(this.elapsedTime * this.emissionRate);
     
@@ -43,7 +42,7 @@ class Emitter {
     
         // Update existing particles
         for (const particle of this.particles) {
-            particle.update(deltaTime, globeRadius, sceneNodes);
+            particle.update(deltaTime, globeRadius, meshes);
         }
     
         // Remove dead particles

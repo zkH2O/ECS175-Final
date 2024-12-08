@@ -16,9 +16,6 @@ class CubeMapLoader {
         faces.forEach((face, index) => {
             const image = new Image();
             image.onload = () => {
-                console.log(`Loaded image for face ${index}: ${face}`);
-                console.log(`Image dimensions: ${image.width}x${image.height}`);
-
                 gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
                 gl.texImage2D(
                     gl.TEXTURE_CUBE_MAP_POSITIVE_X + index,
@@ -31,7 +28,6 @@ class CubeMapLoader {
 
                 loadedImages++;
                 if (loadedImages === 6) {
-                    console.log("All cube map faces loaded.");
                     gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
                     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
                     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);

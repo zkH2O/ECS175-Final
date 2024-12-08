@@ -25,7 +25,6 @@ class AppState {
         };
 
         // Update UI with default values
-        this.updateUI('Shading', 'Phong');
         this.updateUI('Control', 'Camera');
 
         // Set asynchronous handlers
@@ -74,11 +73,6 @@ class AppState {
      */
     update() {
         // Shading
-        if (Input.isKeyPressed('c')) {
-            this.updateUI('Shading', 'Phong');
-        } else if (Input.isKeyPressed('v')) {
-            this.updateUI('Shading', 'Textured');
-        }
 
         // Transformation
         if (Input.isKeyDown('q')) {

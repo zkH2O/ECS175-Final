@@ -2,7 +2,7 @@
     "models": [
         {
             "name": "teapot",
-            "obj": "./models/teapot/teapot.obj"
+            "obj": "./models/Utah Teapot/teapot.obj"
         }
     ],
     "lights": [
@@ -30,9 +30,9 @@
         "type": "model",
         "content": "teapot",
         "transformation": {
-            "translation": [0, 0, 0],
+            "translation": [0.33, 0.1, -0.55],
             "rotation": [0, 0, 0],
-            "scale": [1, 1, 1]
+            "scale": [1.1, 1.1, 1.1]
         },
         "children": [
             {
@@ -50,7 +50,7 @@
                         "content": "directional1",
                         "transformation": {
                             "translation": [-1.5, 0, 0],
-                            "rotation": [0,0,90]
+                            "rotation": [25, 25, 90]
                         }
                     },
                     {

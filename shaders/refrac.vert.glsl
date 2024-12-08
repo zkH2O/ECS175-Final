@@ -1,17 +1,26 @@
 #version 300 es
 
-layout(location = 0) in vec3 a_position;
-layout(location = 1) in vec3 a_normal;
+// Input attributes
+in vec3 a_position; // Vertex position
+in vec3 a_normal;   // Vertex normal
 
-uniform mat4 u_mvp; // Model-View-Projection matrix
-uniform mat4 u_model; // Model matrix
+// Transformation matrices
+uniform mat4 u_m; // Model matrix
+uniform mat4 u_v; // View matrix
+uniform mat4 u_p; // Projection matrix
 
-out vec3 v_normal; // Normal vector in world space
-out vec3 v_worldPos; // World position of the vertex
+// Outputs to fragment shader
+out vec3 o_vertex_normal_world;   // Normal in world space
+out vec3 o_vertex_position_world; // Position in world space
 
 void main() {
-    vec4 worldPos = u_model * vec4(a_position, 1.0);
-    v_worldPos = worldPos.xyz;
-    v_normal = mat3(u_model) * a_normal; // Transform normal to world space
-    gl_Position = u_mvp * vec4(a_position, 1.0);
+    // Transform the vertex position to world space
+    vec4 world_position = u_m * vec4(a_position, 1.0);
+    o_vertex_position_world = world_position.xyz;
+
+    // Transform the normal to world space
+    o_vertex_normal_world = mat3(u_m) * a_normal; // Use the upper-left 3x3 of the model matrix to transform normals
+
+    // Calculate the final clip-space position (MVP transformation)
+    gl_Position = u_p * u_v * world_position;
 }

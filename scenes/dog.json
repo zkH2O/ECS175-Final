@@ -1,7 +1,7 @@
 {
     "models": [
         {
-            "name": "cow",
+            "name": "dog",
             "obj": "./models/Biking Dog/model.obj"
         }
     ],
@@ -28,7 +28,7 @@
     "scenegraph": {
         "name": "model_node",
         "type": "model",
-        "content": "cow",
+        "content": "dog",
         "transformation": {
             "translation": [0, 0, 0],
             "rotation": [0, 0, 0],

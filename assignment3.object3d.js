@@ -279,41 +279,42 @@ class ShadedObject3D extends Object3D {
      * 
      * @param { WebGL2RenderingContext } gl The webgl2 rendering context
      */
-    render( gl )
-    {
-        this.shader.use( )
-
+    render(gl) {
+        this.shader.use();
+    
         // Pass basic material properties
-        this.shader.setUniform3f('u_material.kA', this.material.kA)
-        this.shader.setUniform3f('u_material.kD', this.material.kD)
-        this.shader.setUniform3f('u_material.kS', this.material.kS)
-        this.shader.setUniform1f('u_material.shininess', this.material.shininess)
-        this.shader.setUniform3f('u_color', this.color)
-        // Set up texture units
-        this.shader.setUniform1i('u_material.map_kD', 0)
-        this.shader.setUniform1i('u_material.map_nS', 1)
-        this.shader.setUniform1i('u_material.map_norm', 2)
-        this.shader.setUniform1f('u_refractiveIndex', this.material.refractiveIndex || 1.0);
-        // Activate and pass texture units if textures are present in the material
+        this.shader.setUniform3f('u_material.kA', this.material.kA);
+        this.shader.setUniform3f('u_material.kD', this.material.kD);
+        this.shader.setUniform3f('u_material.kS', this.material.kS);
+        this.shader.setUniform1f('u_material.shininess', this.material.shininess);
+    
+        // Bind texture maps
         if (this.material.hasMapKD()) {
-            gl.activeTexture(gl.TEXTURE0)
-            gl.bindTexture(gl.TEXTURE_2D, this.material.getMapKD())
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, this.material.map_kD.getGlTexture());
+            this.shader.setUniform1i('u_material.map_kD', 0);
         }
-
-        if (this.material.hasMapNS()) {
-            gl.activeTexture(gl.TEXTURE1)
-            gl.bindTexture(gl.TEXTURE_2D, this.material.getMapNS())
-        }
-
+    
         if (this.material.hasMapNorm()) {
-            gl.activeTexture(gl.TEXTURE2)
-            gl.bindTexture(gl.TEXTURE_2D, this.material.getMapNorm())
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, this.material.map_norm.getGlTexture());
+            this.shader.setUniform1i('u_material.map_norm', 1);
         }
-
-        this.shader.unuse( )
-
-        super.render( gl )
+    
+        // Bind environment map
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.envMap);
+        this.shader.setUniform1i('u_envMap', 2);
+    
+        // Call parent render method
+        super.render(gl);
+    
+        // Unbind textures
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+        this.shader.unuse();
     }
+    
 }
 
 export {

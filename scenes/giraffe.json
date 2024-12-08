@@ -1,7 +1,7 @@
 {
     "models": [
         {
-            "name": "cow",
+            "name": "giraffe",
             "obj": "./models/Hilton Giraffe/giraffe.obj"
         }
     ],
@@ -28,7 +28,7 @@
     "scenegraph": {
         "name": "model_node",
         "type": "model",
-        "content": "cow",
+        "content": "giraffe",
         "transformation": {
             "translation": [0.3, -0.2, -0.1],
             "rotation": [0, 0, 0],

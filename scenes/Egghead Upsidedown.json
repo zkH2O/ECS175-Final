@@ -1,7 +1,7 @@
 {
     "models": [
         {
-            "name": "cow",
+            "name": "egghead",
             "obj": "./models/Egghead Upside Down/egg.obj"
         }
     ],
@@ -28,7 +28,7 @@
     "scenegraph": {
         "name": "model_node",
         "type": "model",
-        "content": "cow",
+        "content": "egghead",
         "transformation": {
             "translation": [0, 0, 0],
             "rotation": [0, 0, 0],

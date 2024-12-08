@@ -1,43 +1,43 @@
 #version 300 es
 
-// an attribute will receive data from a buffer
-in vec3 a_position;
-in vec3 a_normal;
-in vec3 a_tangent;
-in vec2 a_texture_coord;
+// Input attributes
+in vec3 a_position;       // Vertex position
+in vec3 a_normal;         // Vertex normal
+in vec3 a_tangent;        // Tangent vector
+in vec2 a_texture_coord;  // Texture coordinates
 
-// transformation matrices
-uniform mat4x4 u_m;
-uniform mat4x4 u_v;
-uniform mat4x4 u_p;
+// Uniforms for transformations
+uniform mat4 u_m; // Model matrix
+uniform mat4 u_v; // View matrix
+uniform mat4 u_p; // Projection matrix
 
-// output to fragment stage
-out mat3 o_tbn;
-out vec3 o_vertex_position_world;
-out vec2 o_texture_coord;
+// Outputs to fragment shader
+out vec3 v_position;      // World-space position of the vertex
+out vec2 v_texcoord;      // Texture coordinates
+out mat3 v_tbn;           // Tangent-Bitangent-Normal (TBN) matrix
 
 void main() {
+    // Compute the world-space position of the vertex
+    vec4 position_world = u_m * vec4(a_position, 1.0);
+    v_position = position_world.xyz;
 
-    // transform a vertex from object space directly to screen space
-    // the full chain of transformations is:
-    // object space -{model}-> world space -{view}-> view space -{projection}-> clip space
-    vec4 vertex_position_world = u_m * vec4(a_position, 1.0);
+    // Forward the texture coordinates
+    v_texcoord = a_texture_coord;
 
-    mat3 norm_matrix = transpose(inverse(mat3(u_m)));
-    vec3 bitangent = normalize(norm_matrix * cross(a_normal, a_tangent));
-    vec3 normal = normalize(norm_matrix * a_normal);
-    vec3 tangent = normalize(norm_matrix * a_tangent);
-    
-    // Gram-Schmidt process to re-orthogonalize tangent
-    tangent = normalize(tangent - normal * dot(normal, tangent));
+    // Compute the normal matrix (inverse transpose of the model matrix)
+    mat3 normal_matrix = transpose(inverse(mat3(u_m)));
 
-    // Construct TBN matrix
-    o_tbn = mat3(tangent, bitangent, normal);
+    // Transform the normal, tangent, and bitangent to world space
+    vec3 normal = normalize(normal_matrix * a_normal);
+    vec3 tangent = normalize(normal_matrix * a_tangent);
+    vec3 bitangent = cross(normal, tangent);
 
-    // Forward vertex positions and texture coordinates to fragment stage
-    o_vertex_position_world = vertex_position_world.xyz;
-    o_texture_coord = a_texture_coord.xy;
+    // Re-orthogonalize the tangent using Gram-Schmidt
+    tangent = normalize(tangent - dot(tangent, normal) * normal);
 
-    gl_Position = u_p * u_v * vertex_position_world;
+    // Construct the TBN matrix
+    v_tbn = mat3(tangent, bitangent, normal);
 
+    // Calculate the clip-space position for rendering
+    gl_Position = u_p * u_v * position_world;
 }

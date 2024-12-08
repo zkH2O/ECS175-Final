@@ -1,7 +1,7 @@
 {
     "models": [
         {
-            "name": "cow",
+            "name": "bee",
             "obj": "./models/Davis Bee Garden Bee/bee_clean.obj"
         }
     ],
@@ -28,7 +28,7 @@
     "scenegraph": {
         "name": "model_node",
         "type": "model",
-        "content": "cow",
+        "content": "bee",
         "transformation": {
             "translation": [0.1, -0.4, 0],
             "rotation": [0, 0, 0],

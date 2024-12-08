@@ -32,9 +32,12 @@ void main() {
     vec3 normalMap = texture(u_material.map_norm, v_texcoord).rgb * 2.0 - 1.0; // Convert to [-1, 1]
     vec3 normal = normalize(v_tbn * normalMap);
 
-
     // View direction
     vec3 viewDir = normalize(u_eye - v_position);
+
+    // Fresnel effect for reflections
+    float fresnel = pow(1.0 - abs(dot(viewDir, normal)), 3.0);
+    fresnel = clamp(fresnel * 0.5, 0.0, 1.0);
 
     // Reflection direction for environment mapping
     vec3 reflectionDir = reflect(-viewDir, normal);
@@ -48,8 +51,11 @@ void main() {
     // Sample environment map for reflections
     vec3 envReflection = texture(u_envMap, reflectionDir).rgb;
 
-    // Combine ambient and reflections
-    vec3 finalColor = mix(ambient, envReflection, 0.5); // Adjust blend factor as needed
+    // Combine ambient, diffuse, and reflections with Fresnel
+    vec3 finalColor = mix(ambient, envReflection, fresnel * 0.5); // Adjust blend factor as needed
+
+    // Gamma correction for final output
+    finalColor = pow(finalColor, vec3(1.0 / 2.2)); // Gamma correction for linear output
 
     // Output the final color
     o_fragColor = vec4(finalColor, 1.0);

@@ -7,6 +7,7 @@ import Box3D from './box3d.js'
 import Input from '../input/input.js'
 import CubeMapLoader from './cubemaploader.js';
 import Skybox3D from './skybox3d.js';
+import Emitter from './emitter.js'
 import * as mat4 from '../lib/glmatrix/mat4.js'
 import * as vec3 from '../lib/glmatrix/vec3.js'
 import * as quat from '../lib/glmatrix/quat.js'
@@ -39,7 +40,12 @@ class WebGlApp
         this.shaders = shaders // Collection of all shaders
         this.light_shader = this.shaders[this.shaders.length - 1]
         this.active_shader = 2
-        
+        this.particleEmitter = new Emitter(
+            [0, 0.8, 0], // Center of the globe
+            1000,      // Max particles
+            50,        // Emission rate
+            5.0        // Particle lifespan
+        );
         // Create a sphere instance and create a variable to track its rotation
         this.sphere = new Sphere3D( gl, this.shaders[6])
         this.animation_step = 0
@@ -50,6 +56,7 @@ class WebGlApp
         this.sphere.shader.unuse();
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
 
         //Creatating small snow layer
         this.snowBase = new Cylinder3D(gl, this.shaders[4], 0.76, 0.01);
@@ -259,7 +266,11 @@ class WebGlApp
      */
     update( gl, app_state, delta_time ) 
     {
-
+        if (this.particleEmitter) {
+            const globeModelMatrix = this.sphere.model_matrix; // Access sphere's model matrix
+            this.particleEmitter.update(delta_time, globeModelMatrix); // Pass matrix to the emitter
+        }
+        
         // Control
         switch(app_state.getState('Control')) {
             case 'Camera':
@@ -471,34 +482,36 @@ class WebGlApp
         gl.viewport(0, 0, canvas_width, canvas_height);
         this.clearCanvas(gl);
     
-        // Step 1: Render the scene into the framebuffer (excluding the sphere)
+
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
         this.clearCanvas(gl);
     
         // Render the scene objects into the framebuffer
-        this.snowBase.render(gl); // Snow layer
-        if (this.scene) this.scene.render(gl); // Scene objects
-        this.bottom.render(gl); // Bottom platform
+        this.snowBase.render(gl);
+        if (this.scene) this.scene.render(gl);
+        this.bottom.render(gl);
     
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null); // Return to default framebuffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     
-        // Step 2: Render the skybox as the background
+
         gl.depthMask(false);
-        this.skybox.render(gl); // Render skybox
+        this.skybox.render(gl);
         gl.depthMask(true);
         this.sphere.shader.use();
         this.sphere.shader.setUniform1i('u_sceneTexture', 1);
-        this.sphere.render(gl); // Render the sphere with refraction
+        gl.depthMask(false);
+        this.sphere.render(gl);
+        gl.depthMask(true); 
         this.sphere.shader.unuse();
-        // Step 3: Render the sphere with refraction effect
-        gl.activeTexture(gl.TEXTURE1); // Use texture unit 1 for the framebuffer texture
-        gl.bindTexture(gl.TEXTURE_2D, this.framebufferTexture);
-    
 
-        // Step 4: Render objects in front of the sphere if needed (optional)
-        this.snowBase.render(gl); // Re-render snowBase if it overlaps the sphere
-        this.bottom.render(gl);   // Re-render bottom if it overlaps the sphere
-        if (this.scene) this.scene.render(gl); // Re-render scene if it overlaps the sphere
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.framebufferTexture);
+        this.particleEmitter.render(gl, this.shaders[8])
+        this.bottom.render(gl);
+
+        this.snowBase.render(gl);
+
+        if (this.scene) this.scene.render(gl);
     }
     
     

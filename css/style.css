@@ -1,20 +1,31 @@
-* {
-    font-family: Arial, Helvetica, sans-serif;
+
+.zilla-slab-light {
+    font-family: "Zilla Slab", serif;
+
+.zilla-slab-light {
+    font-family: "Zilla Slab", serif;
     font-weight: 300;
-    font-size: 14px;
-    text-align: center;
-}
+    font-style: normal;
+  }
+    font-style: normal;
+  }
 
 html, body {
     height: 100%;
     margin: 0;
     overflow: hidden;
+    font-family: "Zilla Slab";
+    font-family: "Zilla Slab";
 }
 
 h1 {
-    font-size: 1.5em;
+    font-size: 2.2em;
+    letter-spacing: 6px;
+    font-size: 2.2em;
+    letter-spacing: 6px;
     font-weight: 600;
-    margin-bottom: 0;
+    /* margin-bottom: 0; */
+    color: #dadfe6;
 }
 
 h2 {
@@ -27,29 +38,42 @@ h3 {
     font-size: 1em;
     font-weight: 600;
     margin: 0;
+    text-align: center;
 }
 
 a {
-    color: #CA3C25;
+    color: #001B39
+    color: #001B39
 }
 
 #app {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #ffecc2;
+    background-color: #001B39
+    background-color: #001B39
 }
 
 #header-container {
-    margin: 2vh;
+    display: flex;
+    background-color: #001B39;
+    width: 100vw;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
+    display: flex;
+    background-color: #001B39;
+    width: 100vw;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
 }
 
 .settings-container {
-    background-color: #fff8e9;
+    background-color: #dadfe6;
     display: flex;
     width: 100%;
-    padding: 0.25em;
+    padding: 0.20em;
+    padding: 0.20em;
     flex-direction: row;
     justify-content: center;
     flex-wrap: wrap;
@@ -62,6 +86,16 @@ a {
     margin: 1em 2em;
 }
 
+.setting h3 {
+    color: #224866;
+    padding-left: 10px;
+}
+
+.setting h3 {
+    color: #224866;
+    padding-left: 10px;
+}
+
 .setting-item-container {
     display: flex;
     margin-top: 1em;
@@ -69,12 +103,13 @@ a {
 }
 
 .setting-item {
-    color: lightgray;
+    color: grey;
     margin: 0 0.75em;
 }
 
 .setting-item.active {
-    color: #CA3C25;
+    color: #001B39;
+    color: #001B39;
 }
 
 
@@ -84,4 +119,20 @@ a {
 
     overflow: scroll;
     background-color: white;
+    border-left: solid #dadfe6 10px;
+    border-right: solid #dadfe6 10px;
+    border-bottom: solid #dadfe6 10px;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+#pattern {
+    background-image: url("images/snow-pattern.jpg");
+    background-size: 300px 300px;
+    background-repeat: repeat;
+    background-position: bottom 50px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }

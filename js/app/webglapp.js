@@ -7,7 +7,10 @@ import Box3D from './box3d.js'
 import Input from '../input/input.js'
 import CubeMapLoader from './cubemaploader.js';
 import Skybox3D from './skybox3d.js';
-import Emitter from './emitter.js'
+import Emitter from './emitter.js';
+import { createTextTexture } from '../utils/utils.js';
+import { Plane3D } from './plane3d.js'; // If Plane3D is a new class
+import { updateBillboard } from '../utils/utils.js'; // If this was modularized
 import * as mat4 from '../lib/glmatrix/mat4.js'
 import * as vec3 from '../lib/glmatrix/vec3.js'
 import * as quat from '../lib/glmatrix/quat.js'
@@ -139,7 +142,6 @@ class WebGlApp
         this.near = 0.001
         this.far = 1000.0
         this.projection = mat4.perspective(mat4.create(), deg2rad(this.fovy), this.aspect, this.near, this.far)
-        
         // Use the shader's setUniform4x4f function to pass the matrices
         for (let shader of this.shaders) {
             shader.use()
@@ -149,6 +151,8 @@ class WebGlApp
             shader.unuse()
             
         }
+
+        
         this.skyboxViewMatrix = mat4.clone(this.view);
         this.skyboxViewMatrix[12] = 0; // Remove translation (x)
         this.skyboxViewMatrix[13] = 0; // Remove translation (y)
@@ -160,6 +164,10 @@ class WebGlApp
         this.shaders[5].setUniform3f('u_eye', this.eye); // Camera position
         this.shaders[5].unuse();
         this.initializeFramebuffer(gl);
+
+        this.textLabel = new Plane3D(gl, shaders[9]); // Create a plane for text
+        this.textLabel.texture = createTextTexture(gl, "");
+        this.textLabel.setPosition(0, 0, 0); // Position above the snowglobe
         
         // Store initial object positions 
         this.originalSpherePos = {
@@ -599,6 +607,26 @@ class WebGlApp
         this.snowBase.render(gl);
 
         if (this.scene) this.scene.render(gl);
+
+        // default text
+        let text = "Hello, Snowglobe";
+        //this.textLabel.texture = createTextTexture(gl, text, "80px Arial", "white");
+
+        // change text based on file uploaded
+        document.getElementById("openfileActionInput").addEventListener("change", (evt) => {
+            const fileInput = evt.target;
+            const file = fileInput.files[0];
+
+            if (file) {
+                const fileName = file.name.replace(/\.json$/, '');
+                text = fileName;
+
+                this.textLabel.texture = createTextTexture(gl, fileName, "80px Arial", "white");
+            }
+        })
+
+        updateBillboard(this.textLabel.modelMatrix, this.view); // Align the text with the camera
+        this.textLabel.render(gl);
     }
     
     

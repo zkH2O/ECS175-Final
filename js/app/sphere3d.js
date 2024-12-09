@@ -42,6 +42,7 @@ class Sphere3D extends Object3D {
         }
 
         super(gl, shader, vertices, indices, gl.LINES);
+        this.radius = radius;
     }
 
     createVAO(gl, shader) {
@@ -80,6 +81,13 @@ class Sphere3D extends Object3D {
 
         gl.bindVertexArray(null);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    }
+
+    // function for defining the snowglobe boundary
+    isPointInside(point) {
+        const [x,y,z] = point;
+        const distance = Math.sqrt(x * x + y * y + z * z);
+        return distance <= this.radius;
     }
 }
 

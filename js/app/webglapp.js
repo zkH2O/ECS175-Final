@@ -60,7 +60,7 @@ class WebGlApp
         this.snowBase.setColor([150.0, 149.0, 146.0])
         this.snowBase.shader.unuse()
         this.particleEmitter = new Emitter(
-            [0, 1, 0], // Center of the globe
+            [0, 0.9, 0], // Center of the globe
             12,      // Max particles
             8,        // Emission rate
             6.0,        // Particle lifespan
@@ -388,12 +388,11 @@ class WebGlApp
         if (this.particleEmitter) {
             const globeModelMatrix = this.sphere.model_matrix; // Access sphere's model matrix
             if (this.scene != null) {
-                this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.5, this.scene.getMeshes()); // Pass matrix to the emitter
+                this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.72, this.scene.getMeshes()); // Pass matrix to the emitter
             }
             else {
-                this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.5, []);
-            }
-        }
+                this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.72, []);
+            }        }
         
         // Control
         switch(app_state.getState('Control')) {

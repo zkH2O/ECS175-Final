@@ -361,6 +361,58 @@ class SceneNode {
     }
 
     /**
+     * Gets the position from the transformation matrix
+     * @returns {Array} [x, y, z] position
+     */
+    getPosition() {
+        // Position is stored in the last column of the transformation matrix
+        return [
+            this.world_transformation[12],
+            this.world_transformation[13],
+            this.world_transformation[14]
+        ];
+    }
+
+    /**
+     * Sets the position in the transformation matrix while preserving other transformations
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} z 
+     */
+    setPosition(x, y, z) {
+        // Create a new world transformation matrix
+        let newWorldTransform = mat4.create();
+        
+        // Copy the current world transformation to preserve other transformations
+        mat4.copy(newWorldTransform, this.world_transformation);
+       
+        // Set the translation components in world space
+        newWorldTransform[12] = x;
+        newWorldTransform[13] = y;
+        newWorldTransform[14] = z;
+       
+        // Calculate the new local transformation
+        // If there's a parent, we need to account for its transformation
+        if (this.parent) {
+            let parentWorldInverse = mat4.create();
+            mat4.invert(parentWorldInverse, this.parent.getWorldTransformation());
+            this.transformation = mat4.multiply(mat4.create(), parentWorldInverse, newWorldTransform);
+        } else {
+            // If no parent, local transformation is the same as world transformation
+            this.transformation = newWorldTransform;
+        }
+       
+        // Update world transformation
+        this.world_transformation = this.calculateWorldTransformation();
+
+        // Update children
+        for (let child of this.children) {
+        child.updateWorldMatrix();
+        }
+    }
+
+
+    /**
      * Getter for the node's parent
      * 
      * @returns {SceneNode | null} The node's parent, if any

@@ -161,6 +161,35 @@ class WebGlApp
         this.shaders[5].unuse();
         this.initializeFramebuffer(gl);
         
+        // Store initial object positions 
+        this.originalSpherePos = {
+            x: this.sphere.getPosition()[0],
+            y: this.sphere.getPosition()[1],
+            z: this.sphere.getPosition()[2]
+        };
+        
+        this.originalSnowBasePos = {
+            x: this.snowBase.getPosition()[0],
+            y: this.snowBase.getPosition()[1],
+            z: this.snowBase.getPosition()[2]
+        };
+        
+        this.originalBottomPos = {
+            x: this.bottom.getPosition()[0],
+            y: this.bottom.getPosition()[1],
+            z: this.bottom.getPosition()[2]
+        };
+        
+        this.originalEmitterPos = {
+            x: this.particleEmitter.position.x,
+            y: this.particleEmitter.position.y,
+            z: this.particleEmitter.position.z
+        };
+
+        this.originalNodePosition = null
+
+        this.shakeTimer = 0;
+        this.shakeDuration = 3;
     }  
 
     initializeFramebuffer(gl) {
@@ -257,7 +286,93 @@ class WebGlApp
         gl.clearColor(...hex2rgb('#2B2B2B'), 1.0)
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     }
+
+    lerpPosition(current, target, factor) {
+        return [
+            current[0] + (target.x - current[0]) * factor,
+            current[1] + (target.y - current[1]) * factor,
+            current[2] + (target.z - current[2]) * factor
+        ];
+    }
+
+    // Function to update shake effect (called in render loop)
+    updateShake(deltaTime) {
+        if (this.shakeTimer < this.shakeDuration) {
+            this.shakeTimer += deltaTime;
+
+            // Apply shake effect to every object
+            const shakeAmount = 0.01 * ((this.shakeDuration - this.shakeTimer) / this.shakeDuration);
+            const time = this.shakeTimer * 10;
+            const dx = (Math.sin(time) + (Math.random() - 0.5) * 0.5) * shakeAmount;
+            const dy = (Math.sin(time * 1.1 + Math.random()) + (Math.random() - 0.5) * 0.5) * shakeAmount;
+            const dz = (Math.sin(time * 0.9 + Math.random()) + (Math.random() - 0.5) * 0.5) * shakeAmount;
     
+            const spherePos = this.sphere.getPosition()
+            this.sphere.setRawPosition(spherePos[0] + dx, spherePos[1] + dy, spherePos[2] + dz);
+
+            const snowBasePos = this.snowBase.getPosition();
+            this.snowBase.setRawPosition(snowBasePos[0] + dx, snowBasePos[1] + dy, snowBasePos[2] + dz);
+
+            const bottomPos = this.bottom.getPosition();
+            this.bottom.setRawPosition(bottomPos[0] + dx, bottomPos[1] + dy, bottomPos[2] + dz);
+
+            const emitterPos = this.snowBase.getPosition();
+            this.particleEmitter.position.x = emitterPos.x;
+            this.particleEmitter.position.y = emitterPos.y;
+            this.particleEmitter.position.z = emitterPos.z;
+
+            if (this.scene) {
+                this.scene.getNodes().forEach((node) => {
+                    if (!this.originalNodePosition) {
+                        this.originalNodePosition = node.getPosition();
+                    }
+                    const currPosition = node.getPosition();
+                    const newX = currPosition[0] + dx;
+                    const newY = currPosition[1] + dy;
+                    const newZ = currPosition[2] + dz;
+                    
+                    node.setPosition(newX, newY, newZ);
+                    node.updateWorldMatrix();
+                })
+                this.scene.getMeshes().forEach((mesh) => {
+                    mesh.position.x += dx;
+                    mesh.position.y += dy;
+                    mesh.position.z += dz;
+                })
+            }
+
+            this.particleEmitter.applyShakeEffect([dx, dy, dz], shakeAmount);
+        } else {
+            // Reset object positions
+            this.shakeTimer = 0;
+            this.shaking = false;
+
+            const lerpFactor = deltaTime * 2;
+    
+            const newSpherePos = this.lerpPosition(this.sphere.getPosition(), this.originalSpherePos, lerpFactor);
+            this.sphere.setRawPosition(...newSpherePos);
+            
+            const newSnowBasePos = this.lerpPosition(this.snowBase.getPosition(), this.originalSnowBasePos, lerpFactor);
+            this.snowBase.setRawPosition(...newSnowBasePos);
+            
+            const newBottomPos = this.lerpPosition(this.bottom.getPosition(), this.originalBottomPos, lerpFactor);
+            this.bottom.setRawPosition(...newBottomPos);
+
+            const newNodePos = this.lerpPosition(this.scene.getNodes()[0].getPosition(), this.originalNodePosition, lerpFactor);
+            this.scene.getNodes()[0].setPosition(...newNodePos);
+            
+            const newEmitterPos = this.lerpPosition([
+                this.particleEmitter.position.x,
+                this.particleEmitter.position.y,
+                this.particleEmitter.position.z
+            ], this.originalEmitterPos, lerpFactor);
+            
+            this.particleEmitter.position.x = newEmitterPos[0];
+            this.particleEmitter.position.y = newEmitterPos[1];
+            this.particleEmitter.position.z = newEmitterPos[2];            
+        }
+    }
+
     /**
      * Updates components of this app
      * 
@@ -267,6 +382,9 @@ class WebGlApp
      */
     update( gl, app_state, delta_time ) 
     {
+        if (this.shaking) {
+            this.updateShake(delta_time);
+        }
         if (this.particleEmitter) {
             const globeModelMatrix = this.sphere.model_matrix; // Access sphere's model matrix
             if (this.scene != null) {
@@ -282,14 +400,9 @@ class WebGlApp
             case 'Camera':
                 this.updateCamera( delta_time )
                 break
-            case 'Scene Node':
-                // Only do this if a scene is loaded
-                if (this.scene == null)
-                    break
-                
-                // Get the currently selected scene node from the UI
-                let scene_node = this.scene.getNode( app_state.getState('Select Scene Node') )
-                this.updateSceneNode( scene_node, delta_time )
+            case 'Shake Globe':
+                this.shakeTimer = 0
+                this.shaking = true
                 break
         }
     }

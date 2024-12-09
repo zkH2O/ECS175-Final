@@ -15,6 +15,15 @@ class Emitter {
         this.elapsedTime = 0;
     }
 
+    applyShakeEffect(offset, shakeAmount) {
+        // Apply the offset to all particles
+        this.particles.forEach(particle => {
+            particle.velocity[0] += offset[0] * shakeAmount;
+            particle.velocity[1] += offset[1] * shakeAmount;
+            particle.velocity[2] += offset[2] * shakeAmount;
+        });
+    }    
+
     update(deltaTime, globeModelMatrix, globeRadius, snowBaseRadius, meshes) {
         this.elapsedTime += deltaTime;
         const particlesToEmit = Math.floor(this.elapsedTime * this.emissionRate);

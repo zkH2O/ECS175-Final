@@ -149,7 +149,6 @@ class OBJLoader {
         
         // Return the result
         const result = [[vertex_data, position_indices, material], mesh];
-        console.log(result);
         return result;        
     }
 

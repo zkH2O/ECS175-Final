@@ -142,7 +142,6 @@ class WebGlApp
         this.near = 0.001
         this.far = 1000.0
         this.projection = mat4.perspective(mat4.create(), deg2rad(this.fovy), this.aspect, this.near, this.far)
-        
         // Use the shader's setUniform4x4f function to pass the matrices
         for (let shader of this.shaders) {
             shader.use()
@@ -152,6 +151,8 @@ class WebGlApp
             shader.unuse()
             
         }
+
+        
         this.skyboxViewMatrix = mat4.clone(this.view);
         this.skyboxViewMatrix[12] = 0; // Remove translation (x)
         this.skyboxViewMatrix[13] = 0; // Remove translation (y)
@@ -532,7 +533,6 @@ class WebGlApp
 
             if (file) {
                 const fileName = file.name.replace(/\.json$/, '');
-                console.log(file.name);
                 text = fileName;
 
                 this.textLabel.texture = createTextTexture(gl, fileName, "80px Arial", "white");

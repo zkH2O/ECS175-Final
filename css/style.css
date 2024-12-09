@@ -1,7 +1,12 @@
 
 .zilla-slab-light {
     font-family: "Zilla Slab", serif;
+
+.zilla-slab-light {
+    font-family: "Zilla Slab", serif;
     font-weight: 300;
+    font-style: normal;
+  }
     font-style: normal;
   }
 
@@ -10,9 +15,12 @@ html, body {
     margin: 0;
     overflow: hidden;
     font-family: "Zilla Slab";
+    font-family: "Zilla Slab";
 }
 
 h1 {
+    font-size: 2.2em;
+    letter-spacing: 6px;
     font-size: 2.2em;
     letter-spacing: 6px;
     font-weight: 600;
@@ -35,13 +43,22 @@ h3 {
 
 a {
     color: #001B39
+    color: #001B39
 }
 
 #app {
     background-color: #001B39
+    background-color: #001B39
 }
 
 #header-container {
+    display: flex;
+    background-color: #001B39;
+    width: 100vw;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
     display: flex;
     background-color: #001B39;
     width: 100vw;
@@ -56,6 +73,7 @@ a {
     display: flex;
     width: 100%;
     padding: 0.20em;
+    padding: 0.20em;
     flex-direction: row;
     justify-content: center;
     flex-wrap: wrap;
@@ -66,6 +84,11 @@ a {
     align-content: center;
     align-items: center;
     margin: 1em 2em;
+}
+
+.setting h3 {
+    color: #224866;
+    padding-left: 10px;
 }
 
 .setting h3 {
@@ -85,6 +108,7 @@ a {
 }
 
 .setting-item.active {
+    color: #001B39;
     color: #001B39;
 }
 

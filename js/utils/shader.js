@@ -40,6 +40,8 @@ class Shader
         }
 
         this.program = program
+
+        // return program;
     }
 
     use( )

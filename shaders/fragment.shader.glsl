@@ -8,4 +8,5 @@ out vec4 outColor;    // Output color to the screen
 
 void main() {
     outColor = vec4(u_color, 1.0); // Set the fragment color
+    // outColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

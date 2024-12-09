@@ -309,13 +309,12 @@ class SceneNode {
      * @returns {mat4} The updated compound world transformation of this node
      */
     calculateWorldTransformation() {
-        let transformations = this.getTransformationHierarchy([])
-        let world = mat4.create()
-        for (let transformation of transformations) {
-            world = mat4.multiply(mat4.create(), transformation, world)
+        // If the object has no parent, this will just be its local transformation.
+        if (this.parent) {
+            const parentWorld = this.parent.world_transformation;
+            return mat4.multiply(mat4.create(), parentWorld, this.transformation);
         }
-
-        return world
+        return this.transformation;
     }
 
     /**
@@ -380,35 +379,13 @@ class SceneNode {
      * @param {number} z 
      */
     setPosition(x, y, z) {
-        // Create a new world transformation matrix
-        let newWorldTransform = mat4.create();
+        // Update translation components of the local transformation matrix
+        this.transformation[12] = x;
+        this.transformation[13] = y;
+        this.transformation[14] = z;
         
-        // Copy the current world transformation to preserve other transformations
-        mat4.copy(newWorldTransform, this.world_transformation);
-       
-        // Set the translation components in world space
-        newWorldTransform[12] = x;
-        newWorldTransform[13] = y;
-        newWorldTransform[14] = z;
-       
-        // Calculate the new local transformation
-        // If there's a parent, we need to account for its transformation
-        if (this.parent) {
-            let parentWorldInverse = mat4.create();
-            mat4.invert(parentWorldInverse, this.parent.getWorldTransformation());
-            this.transformation = mat4.multiply(mat4.create(), parentWorldInverse, newWorldTransform);
-        } else {
-            // If no parent, local transformation is the same as world transformation
-            this.transformation = newWorldTransform;
-        }
-       
-        // Update world transformation
+        // Recalculate world transformation after updating local position
         this.world_transformation = this.calculateWorldTransformation();
-
-        // Update children
-        for (let child of this.children) {
-        child.updateWorldMatrix();
-        }
     }
 
 

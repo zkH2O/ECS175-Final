@@ -61,9 +61,9 @@ class WebGlApp
         this.snowBase.shader.unuse()
         this.particleEmitter = new Emitter(
             [0, 0.9, 0], // Center of the globe
-            12,      // Max particles
-            8,        // Emission rate
-            6.0,        // Particle lifespan
+            16,      // Max particles
+            6,        // Emission rate
+            4.0,        // Particle lifespan
             this.snowBase.getPosition()
         );
         //creating the bottom platform
@@ -288,11 +288,16 @@ class WebGlApp
     }
 
     lerpPosition(current, target, factor) {
-        return [
-            current[0] + (target.x - current[0]) * factor,
-            current[1] + (target.y - current[1]) * factor,
-            current[2] + (target.z - current[2]) * factor
+        // Ensure both start and end are valid (not NaN)
+        if (isNaN(current[0]) || isNaN(current[1]) || isNaN(current[2]) || isNaN(target[0]) || isNaN(target[1]) || isNaN(target[2])) {
+            return current; // Avoid applying lerp if positions are invalid
+        }
+        let position = [
+            current[0] + (target[0] - current[0]) * factor,
+            current[1] + (target[1] - current[1]) * factor,
+            current[2] + (target[2] - current[2]) * factor
         ];
+        return position;
     }
 
     // Function to update shake effect (called in render loop)
@@ -332,7 +337,6 @@ class WebGlApp
                     const newZ = currPosition[2] + dz;
                     
                     node.setPosition(newX, newY, newZ);
-                    node.updateWorldMatrix();
                 })
                 this.scene.getMeshes().forEach((mesh) => {
                     mesh.position.x += dx;
@@ -345,7 +349,6 @@ class WebGlApp
         } else {
             // Reset object positions
             this.shakeTimer = 0;
-            this.shaking = false;
 
             const lerpFactor = deltaTime * 2;
     
@@ -358,8 +361,15 @@ class WebGlApp
             const newBottomPos = this.lerpPosition(this.bottom.getPosition(), this.originalBottomPos, lerpFactor);
             this.bottom.setRawPosition(...newBottomPos);
 
-            const newNodePos = this.lerpPosition(this.scene.getNodes()[0].getPosition(), this.originalNodePosition, lerpFactor);
-            this.scene.getNodes()[0].setPosition(...newNodePos);
+            if (this.scene) {
+                // just for first node
+                const newNodePos = this.lerpPosition(this.scene.getNodes()[0].getPosition(), this.originalNodePosition, lerpFactor);
+                this.scene.getNodes()[0].setPosition(...newNodePos);
+                const newMeshPos = this.lerpPosition(this.scene.getMeshes()[0].position, this.originalNodePosition, lerpFactor);
+                this.scene.getMeshes()[0].position.x = newMeshPos[0];
+                this.scene.getMeshes()[0].position.y = newMeshPos[1];
+                this.scene.getMeshes()[0].position.z = newMeshPos[2];
+            }
             
             const newEmitterPos = this.lerpPosition([
                 this.particleEmitter.position.x,
@@ -369,7 +379,10 @@ class WebGlApp
             
             this.particleEmitter.position.x = newEmitterPos[0];
             this.particleEmitter.position.y = newEmitterPos[1];
-            this.particleEmitter.position.z = newEmitterPos[2];            
+            this.particleEmitter.position.z = newEmitterPos[2]; 
+            
+            // Set shaking to false first
+            this.shaking = false;
         }
     }
 

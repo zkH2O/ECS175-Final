@@ -64,9 +64,9 @@ class WebGlApp
         this.snowBase.shader.unuse()
         this.particleEmitter = new Emitter(
             [0, 0.9, 0], // Center of the globe
-            400,      // Max particles
-            30,        // Emission rate
-            10.0,        // Particle lifespan
+            16,      // Max particles
+            6,        // Emission rate
+            4.0,        // Particle lifespan
             this.snowBase.getPosition()
         );
         //creating the bottom platform
@@ -169,6 +169,35 @@ class WebGlApp
         this.textLabel.texture = createTextTexture(gl, "");
         this.textLabel.setPosition(0, 0, 0); // Position above the snowglobe
         
+        // Store initial object positions 
+        this.originalSpherePos = {
+            x: this.sphere.getPosition()[0],
+            y: this.sphere.getPosition()[1],
+            z: this.sphere.getPosition()[2]
+        };
+        
+        this.originalSnowBasePos = {
+            x: this.snowBase.getPosition()[0],
+            y: this.snowBase.getPosition()[1],
+            z: this.snowBase.getPosition()[2]
+        };
+        
+        this.originalBottomPos = {
+            x: this.bottom.getPosition()[0],
+            y: this.bottom.getPosition()[1],
+            z: this.bottom.getPosition()[2]
+        };
+        
+        this.originalEmitterPos = {
+            x: this.particleEmitter.position.x,
+            y: this.particleEmitter.position.y,
+            z: this.particleEmitter.position.z
+        };
+
+        this.originalNodePosition = null
+
+        this.shakeTimer = 0;
+        this.shakeDuration = 3;
     }  
 
     initializeFramebuffer(gl) {
@@ -265,7 +294,106 @@ class WebGlApp
         gl.clearColor(...hex2rgb('#2B2B2B'), 1.0)
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     }
+
+    lerpPosition(current, target, factor) {
+        // Ensure both start and end are valid (not NaN)
+        if (isNaN(current[0]) || isNaN(current[1]) || isNaN(current[2]) || isNaN(target[0]) || isNaN(target[1]) || isNaN(target[2])) {
+            return current; // Avoid applying lerp if positions are invalid
+        }
+        let position = [
+            current[0] + (target[0] - current[0]) * factor,
+            current[1] + (target[1] - current[1]) * factor,
+            current[2] + (target[2] - current[2]) * factor
+        ];
+        return position;
+    }
+
+    // Function to update shake effect (called in render loop)
+    updateShake(deltaTime) {
+        if (this.shakeTimer < this.shakeDuration) {
+            this.shakeTimer += deltaTime;
+
+            // Apply shake effect to every object
+            const shakeAmount = 0.01 * ((this.shakeDuration - this.shakeTimer) / this.shakeDuration);
+            const time = this.shakeTimer * 10;
+            const dx = (Math.sin(time) + (Math.random() - 0.5) * 0.5) * shakeAmount;
+            const dy = (Math.sin(time * 1.1 + Math.random()) + (Math.random() - 0.5) * 0.5) * shakeAmount;
+            const dz = (Math.sin(time * 0.9 + Math.random()) + (Math.random() - 0.5) * 0.5) * shakeAmount;
     
+            const spherePos = this.sphere.getPosition()
+            this.sphere.setRawPosition(spherePos[0] + dx, spherePos[1] + dy, spherePos[2] + dz);
+
+            const snowBasePos = this.snowBase.getPosition();
+            this.snowBase.setRawPosition(snowBasePos[0] + dx, snowBasePos[1] + dy, snowBasePos[2] + dz);
+
+            const bottomPos = this.bottom.getPosition();
+            this.bottom.setRawPosition(bottomPos[0] + dx, bottomPos[1] + dy, bottomPos[2] + dz);
+
+            const emitterPos = this.snowBase.getPosition();
+            this.particleEmitter.position.x = emitterPos.x;
+            this.particleEmitter.position.y = emitterPos.y;
+            this.particleEmitter.position.z = emitterPos.z;
+
+            if (this.scene) {
+                this.scene.getNodes().forEach((node) => {
+                    if (!this.originalNodePosition) {
+                        this.originalNodePosition = node.getPosition();
+                    }
+                    const currPosition = node.getPosition();
+                    const newX = currPosition[0] + dx;
+                    const newY = currPosition[1] + dy;
+                    const newZ = currPosition[2] + dz;
+                    
+                    node.setPosition(newX, newY, newZ);
+                })
+                this.scene.getMeshes().forEach((mesh) => {
+                    mesh.position.x += dx;
+                    mesh.position.y += dy;
+                    mesh.position.z += dz;
+                })
+            }
+
+            this.particleEmitter.applyShakeEffect([dx, dy, dz], shakeAmount);
+        } else {
+            // Reset object positions
+            this.shakeTimer = 0;
+
+            const lerpFactor = deltaTime * 2;
+    
+            const newSpherePos = this.lerpPosition(this.sphere.getPosition(), this.originalSpherePos, lerpFactor);
+            this.sphere.setRawPosition(...newSpherePos);
+            
+            const newSnowBasePos = this.lerpPosition(this.snowBase.getPosition(), this.originalSnowBasePos, lerpFactor);
+            this.snowBase.setRawPosition(...newSnowBasePos);
+            
+            const newBottomPos = this.lerpPosition(this.bottom.getPosition(), this.originalBottomPos, lerpFactor);
+            this.bottom.setRawPosition(...newBottomPos);
+
+            if (this.scene) {
+                // just for first node
+                const newNodePos = this.lerpPosition(this.scene.getNodes()[0].getPosition(), this.originalNodePosition, lerpFactor);
+                this.scene.getNodes()[0].setPosition(...newNodePos);
+                const newMeshPos = this.lerpPosition(this.scene.getMeshes()[0].position, this.originalNodePosition, lerpFactor);
+                this.scene.getMeshes()[0].position.x = newMeshPos[0];
+                this.scene.getMeshes()[0].position.y = newMeshPos[1];
+                this.scene.getMeshes()[0].position.z = newMeshPos[2];
+            }
+            
+            const newEmitterPos = this.lerpPosition([
+                this.particleEmitter.position.x,
+                this.particleEmitter.position.y,
+                this.particleEmitter.position.z
+            ], this.originalEmitterPos, lerpFactor);
+            
+            this.particleEmitter.position.x = newEmitterPos[0];
+            this.particleEmitter.position.y = newEmitterPos[1];
+            this.particleEmitter.position.z = newEmitterPos[2]; 
+            
+            // Set shaking to false first
+            this.shaking = false;
+        }
+    }
+
     /**
      * Updates components of this app
      * 
@@ -275,24 +403,26 @@ class WebGlApp
      */
     update( gl, app_state, delta_time ) 
     {
+        if (this.shaking) {
+            this.updateShake(delta_time);
+        }
         if (this.particleEmitter) {
             const globeModelMatrix = this.sphere.model_matrix; // Access sphere's model matrix
-            this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.72); // Pass matrix to the emitter
-        }
+            if (this.scene != null) {
+                this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.72, this.scene.getMeshes()); // Pass matrix to the emitter
+            }
+            else {
+                this.particleEmitter.update(delta_time, globeModelMatrix, 1, 0.72, []);
+            }        }
         
         // Control
         switch(app_state.getState('Control')) {
             case 'Camera':
                 this.updateCamera( delta_time )
                 break
-            case 'Scene Node':
-                // Only do this if a scene is loaded
-                if (this.scene == null)
-                    break
-                
-                // Get the currently selected scene node from the UI
-                let scene_node = this.scene.getNode( app_state.getState('Select Scene Node') )
-                this.updateSceneNode( scene_node, delta_time )
+            case 'Shake Globe':
+                this.shakeTimer = 0
+                this.shaking = true
                 break
         }
     }

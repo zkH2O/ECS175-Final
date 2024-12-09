@@ -2,6 +2,7 @@
 
 import { Particle } from './particle.js';
 import * as vec3 from '../lib/glmatrix/vec3.js'
+
 class Emitter {
     constructor(position, maxParticles, emissionRate, particleLifetime, snowBasePosition) {
         this.position = position; // vec3
@@ -13,12 +14,21 @@ class Emitter {
         this.particles = [];
         this.elapsedTime = 0;
     }
-    
 
-    update(deltaTime, globeModelMatrix, globeRadius, snowBaseRadius) {
+    applyShakeEffect(offset, shakeAmount) {
+        // Apply the offset to all particles
+        this.particles.forEach(particle => {
+            particle.velocity[0] += offset[0] * shakeAmount;
+            particle.velocity[1] += offset[1] * shakeAmount;
+            particle.velocity[2] += offset[2] * shakeAmount;
+        });
+    }    
+
+    update(deltaTime, globeModelMatrix, globeRadius, snowBaseRadius, meshes) {
         this.elapsedTime += deltaTime;
         const particlesToEmit = Math.floor(this.elapsedTime * this.emissionRate);
     
+        // Create new particles
         for (let i = 0; i < particlesToEmit && this.particles.length < this.maxParticles; i++) {
             const velocity = [
                 (Math.random() - 0.5) * 2, // Random velocity
@@ -34,44 +44,14 @@ class Emitter {
                 globeModelMatrix
             );
     
-            this.particles.push(new Particle([...this.position], transformedVelocity, acceleration, this.particleLifetime));
+            this.particles.push(new Particle([...this.position], transformedVelocity, acceleration, this.particleLifetime, this.snowBasePosition));
         }
     
         this.elapsedTime %= (1 / this.emissionRate);
     
+        // Update existing particles
         for (const particle of this.particles) {
-            particle.update(deltaTime);
-    
-            const dx = particle.position[0] - this.snowBasePosition[0];
-            const dz = particle.position[2] - this.snowBasePosition[2];
-            const distanceXZ = Math.sqrt(dx * dx + dz * dz); // Distance from center in XZ plane
-            const height = particle.position[1]; // Y-axis height
-    
-            // Check if the particle is near the snow base's height
-            const snowBaseHeight = this.snowBasePosition[1];
-            if (height <= snowBaseHeight + 0.1) {
-                particle.velocity = [0, 0, 0]; // Stop motion
-                particle.acceleration = [0, 0, 0]; // Stop applying forces
-                particle.position[1] = snowBaseHeight; // Snap to the snow base height
-    
-                // Constrain particles to within the radius of the snow base
-                if (distanceXZ > snowBaseRadius) {
-                    const scale = snowBaseRadius / distanceXZ;
-                    particle.position[0] = this.snowBasePosition[0] + dx * scale;
-                    particle.position[2] = this.snowBasePosition[2] + dz * scale;
-                }
-            } else {
-                // Apply boundary reflection for particles outside the globe
-                const distanceFromCenter = vec3.length(particle.position);
-                if (distanceFromCenter > globeRadius) {
-                    const normal = vec3.normalize(vec3.create(), particle.position);
-                    const velocityDotNormal = vec3.dot(particle.velocity, normal);
-                    const reflection = vec3.scale(vec3.create(), normal, 2 * velocityDotNormal);
-                    vec3.subtract(particle.velocity, particle.velocity, reflection);
-                    const penetrationDepth = distanceFromCenter - globeRadius;
-                    vec3.scaleAndAdd(particle.position, particle.position, normal, -penetrationDepth);
-                }
-            }
+            particle.update(deltaTime, globeRadius, meshes);
         }
     
         // Remove dead particles

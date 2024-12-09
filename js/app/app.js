@@ -48,7 +48,6 @@ class App
 
         // webgl app implementation
         this.impl = new WebGlApp( this.gl, this.shaders, this.app_state )
-
     }
 
     /**

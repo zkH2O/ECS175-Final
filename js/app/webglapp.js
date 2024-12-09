@@ -287,19 +287,6 @@ class WebGlApp
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     }
 
-    lerpPosition(current, target, factor) {
-        // Ensure both start and end are valid (not NaN)
-        if (isNaN(current[0]) || isNaN(current[1]) || isNaN(current[2]) || isNaN(target[0]) || isNaN(target[1]) || isNaN(target[2])) {
-            return current; // Avoid applying lerp if positions are invalid
-        }
-        let position = [
-            current[0] + (target[0] - current[0]) * factor,
-            current[1] + (target[1] - current[1]) * factor,
-            current[2] + (target[2] - current[2]) * factor
-        ];
-        return position;
-    }
-
     // Function to update shake effect (called in render loop)
     updateShake(deltaTime) {
         if (this.shakeTimer < this.shakeDuration) {
@@ -308,9 +295,9 @@ class WebGlApp
             // Apply shake effect to every object
             const shakeAmount = 0.01 * ((this.shakeDuration - this.shakeTimer) / this.shakeDuration);
             const time = this.shakeTimer * 10;
-            const dx = (Math.sin(time) + (Math.random() - 0.5) * 0.5) * shakeAmount;
-            const dy = (Math.sin(time * 1.1 + Math.random()) + (Math.random() - 0.5) * 0.5) * shakeAmount;
-            const dz = (Math.sin(time * 0.9 + Math.random()) + (Math.random() - 0.5) * 0.5) * shakeAmount;
+            const dx = Math.sin(time + Math.random() - 0.5) * shakeAmount;
+            const dy = Math.sin(time + Math.random() - 0.5) * shakeAmount;
+            const dz = Math.sin(time + Math.random() - 0.5) * shakeAmount;
     
             const spherePos = this.sphere.getPosition()
             this.sphere.setRawPosition(spherePos[0] + dx, spherePos[1] + dy, spherePos[2] + dz);
@@ -321,10 +308,9 @@ class WebGlApp
             const bottomPos = this.bottom.getPosition();
             this.bottom.setRawPosition(bottomPos[0] + dx, bottomPos[1] + dy, bottomPos[2] + dz);
 
-            const emitterPos = this.snowBase.getPosition();
-            this.particleEmitter.position.x = emitterPos.x;
-            this.particleEmitter.position.y = emitterPos.y;
-            this.particleEmitter.position.z = emitterPos.z;
+            this.particleEmitter.position.x = spherePos[0] + dx;
+            this.particleEmitter.position.y = spherePos[1] + 1 + dy;
+            this.particleEmitter.position.z = spherePos[2] + dz;
 
             if (this.scene) {
                 this.scene.getNodes().forEach((node) => {
@@ -349,38 +335,6 @@ class WebGlApp
         } else {
             // Reset object positions
             this.shakeTimer = 0;
-
-            const lerpFactor = deltaTime * 2;
-    
-            const newSpherePos = this.lerpPosition(this.sphere.getPosition(), this.originalSpherePos, lerpFactor);
-            this.sphere.setRawPosition(...newSpherePos);
-            
-            const newSnowBasePos = this.lerpPosition(this.snowBase.getPosition(), this.originalSnowBasePos, lerpFactor);
-            this.snowBase.setRawPosition(...newSnowBasePos);
-            
-            const newBottomPos = this.lerpPosition(this.bottom.getPosition(), this.originalBottomPos, lerpFactor);
-            this.bottom.setRawPosition(...newBottomPos);
-
-            if (this.scene) {
-                // just for first node
-                const newNodePos = this.lerpPosition(this.scene.getNodes()[0].getPosition(), this.originalNodePosition, lerpFactor);
-                this.scene.getNodes()[0].setPosition(...newNodePos);
-                const newMeshPos = this.lerpPosition(this.scene.getMeshes()[0].position, this.originalNodePosition, lerpFactor);
-                this.scene.getMeshes()[0].position.x = newMeshPos[0];
-                this.scene.getMeshes()[0].position.y = newMeshPos[1];
-                this.scene.getMeshes()[0].position.z = newMeshPos[2];
-            }
-            
-            const newEmitterPos = this.lerpPosition([
-                this.particleEmitter.position.x,
-                this.particleEmitter.position.y,
-                this.particleEmitter.position.z
-            ], this.originalEmitterPos, lerpFactor);
-            
-            this.particleEmitter.position.x = newEmitterPos[0];
-            this.particleEmitter.position.y = newEmitterPos[1];
-            this.particleEmitter.position.z = newEmitterPos[2]; 
-            
             // Set shaking to false first
             this.shaking = false;
         }
@@ -413,8 +367,10 @@ class WebGlApp
                 this.updateCamera( delta_time )
                 break
             case 'Shake Globe':
-                this.shakeTimer = 0
-                this.shaking = true
+                if (!this.shaking) {
+                    this.shakeTimer = 0
+                    this.shaking = true
+                }
                 break
         }
     }

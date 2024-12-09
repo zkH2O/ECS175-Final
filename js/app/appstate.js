@@ -28,9 +28,9 @@ class AppState {
         this.updateUI('Control', 'Camera');
 
         // Set asynchronous handlers
-        this.ui_categories['Select Scene Node'].onchange = () => {
-            this.ui_state['Select Scene Node'] = this.ui_categories['Select Scene Node'].value
-        }
+        // this.ui_categories['Select Scene Node'].onchange = () => {
+        //     this.ui_state['Select Scene Node'] = this.ui_categories['Select Scene Node'].value
+        // }
         this.onOpen3DSceneCallback = null
         this.ui_categories['3D Scene'].onchange = (evt) => {
             if (this.onOpen3DSceneCallback == null)

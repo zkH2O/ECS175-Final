@@ -95,6 +95,12 @@ class Object3D
         mat4.translate(this.model_matrix, this.model_matrix, [x, y, z]);
     }
 
+    setRawPosition(x, y, z) {
+        this.model_matrix[12] = x
+        this.model_matrix[13] = y
+        this.model_matrix[14] = z
+    }
+
     getPosition() {
         return [this.model_matrix[12], this.model_matrix[13], this.model_matrix[14]]
     }

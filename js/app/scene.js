@@ -33,6 +33,7 @@ class Scene {
      */
     constructor(scene_config, gl, shader, light_shader) {
         this.scene_config = scene_config
+        this.meshes = []
 
         // First load the OBJ models
         this.models = 'models' in scene_config ? this.loadModels(scene_config.models, gl) : {}
@@ -86,7 +87,10 @@ class Scene {
         for (let model_config of models_config) {
             // Load the OBJ file
             let loader = new OBJLoader(model_config.obj)
-            models[model_config.name] = loader.load(gl)
+            const model = loader.load(gl)
+            models[model_config.name] = model[0]
+            this.meshes.push(model[1])
+            model[1].geometry.computeBoundingSphere()
         }
 
         return models
@@ -250,6 +254,10 @@ class Scene {
         return node
     }
 
+    getMeshes( ) {
+        return this.meshes
+    }
+
     /**
      * Renders the scene by cascading through the scene graph and rendering nodes that hold geometry
      * 
@@ -301,13 +309,12 @@ class SceneNode {
      * @returns {mat4} The updated compound world transformation of this node
      */
     calculateWorldTransformation() {
-        let transformations = this.getTransformationHierarchy([])
-        let world = mat4.create()
-        for (let transformation of transformations) {
-            world = mat4.multiply(mat4.create(), transformation, world)
+        // If the object has no parent, this will just be its local transformation.
+        if (this.parent) {
+            const parentWorld = this.parent.world_transformation;
+            return mat4.multiply(mat4.create(), parentWorld, this.transformation);
         }
-
-        return world
+        return this.transformation;
     }
 
     /**
@@ -346,6 +353,41 @@ class SceneNode {
             child.setTransformation(child.transformation)
         this.world_transformation = this.calculateWorldTransformation()
     }
+
+    updateWorldMatrix() {
+        // Update world transformation
+        this.world_transformation = this.calculateWorldTransformation();
+    }
+
+    /**
+     * Gets the position from the transformation matrix
+     * @returns {Array} [x, y, z] position
+     */
+    getPosition() {
+        // Position is stored in the last column of the transformation matrix
+        return [
+            this.world_transformation[12],
+            this.world_transformation[13],
+            this.world_transformation[14]
+        ];
+    }
+
+    /**
+     * Sets the position in the transformation matrix while preserving other transformations
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} z 
+     */
+    setPosition(x, y, z) {
+        // Update translation components of the local transformation matrix
+        this.transformation[12] = x;
+        this.transformation[13] = y;
+        this.transformation[14] = z;
+        
+        // Recalculate world transformation after updating local position
+        this.world_transformation = this.calculateWorldTransformation();
+    }
+
 
     /**
      * Getter for the node's parent

@@ -82,7 +82,6 @@ function getRelativeMousePosition( event )
         y: event.clientY - rect.top,
 
     }
-
 }
 
 /**
@@ -120,6 +119,62 @@ function getFileDir(path) {
     return result
 }
 
+function createTextTexture(gl, text, font = "30px Arial", color = "white") {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Set font and measure text
+    ctx.font = font;
+    canvas.width = 800;
+    canvas.height = 200;
+
+    // Flip the canvas vertically
+    ctx.translate(0, canvas.height);
+    ctx.scale(1, -1);
+
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1,1);
+
+    // Set text styles and alignments
+    ctx.font = font;
+    ctx.fillStyle = color;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+    // Create WebGL texture
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        canvas
+    );
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    return texture;
+}
+
+function updateBillboard(modelMatrix, viewMatrix) {
+    mat4.identity(modelMatrix);
+
+    const rotationMatrix = mat4.clone(viewMatrix);
+    rotationMatrix[12] = 0; // Remove translation (x)
+    rotationMatrix[13] = 0; // Remove translation (y)
+    rotationMatrix[14] = 0; // Remove translation (z)
+    mat4.invert(rotationMatrix, rotationMatrix); // Invert for billboarding
+
+    // Apply the billboard rotation
+    mat4.multiply(modelMatrix, rotationMatrix, modelMatrix);
+}
+
 export
 {
     
@@ -129,6 +184,8 @@ export
     deg2rad,
     getRelativeMousePosition,
     json2transform,
-    getFileDir
+    getFileDir,
+    createTextTexture,
+    updateBillboard
 
 }
